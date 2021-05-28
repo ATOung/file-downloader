@@ -1,5 +1,7 @@
 # file-downloader
 ### INFO
+Made with Python 3.8.6 in Windows
+
 Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 - -h    Show help
 - -p    mediafire, solidfiles
@@ -17,5 +19,6 @@ Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 
 ### Upcoming Features
 - Add support for Racaty and Zippyshare
+- Add features to resume and pause download
 
 > Please report if there is a bug on this script
