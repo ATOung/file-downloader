@@ -21,6 +21,5 @@ Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 
 ### Upcoming Features
 - Add support for Racaty, Zippyshare and Anonfiles
-- Add features to resume and pause download
 
 > Please report if there is a bug on this script
