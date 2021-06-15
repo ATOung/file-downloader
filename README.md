@@ -4,7 +4,7 @@ Made with Python 3.8.6 in Windows
 
 Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 - -h    Show help
-- -p    mediafire, solidfiles
+- -p    mediafire, solidfiles, tusfiles
 
 -  Optional options:
    - -grabdirectlink  Get direct download link only
