@@ -12,6 +12,7 @@ Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 ### Supported File Hosting
 - Mediafire
 - Solidfiles
+- Tusfiles
 
 ### Features
 - Download speed meter
