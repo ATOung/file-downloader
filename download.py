@@ -57,12 +57,9 @@ def test():
     start=time.time()
     r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080",headers={"Accept-Encoding":"gzip, compress, br"})
     ping=int((round(time.time() - start, 3))*1000)
-    if ping < 500:
-        print(f"{gr}[G] Your connection is good | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
-    elif 500 <= ping < 1000:
-        print(f"{ye}[N] Your connection is normal | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
-    else:
-        print(f"{re}[B] Your connection is bad | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    if ping < 500: print(f"{gr}[G] Your connection is good | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    elif 500 <= ping < 1000: print(f"{ye}[N] Your connection is normal | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    else: print(f"{re}[B] Your connection is bad | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
 
 #BANNER
 def banner():
@@ -124,6 +121,10 @@ class dl:
                 os.system(clear)
                 banner()
                 self.anonfiles()
+            elif provider == "bayfiles":
+                os.system(clear)
+                banner()
+                self.bayfiles()
         else:
             os.remove(f"{tmp}/{self.name}")
             print(f"{re}> {ma}File {cy}{self.name} {ma}removed")
@@ -256,11 +257,27 @@ class dl:
                 self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive","Range":f"bytes={str(self.downloaded)}-"}, stream=True)
                 self.start("R","anonfiles")
             else:
-                self.data=r.get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"}, stream=True)
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"}, stream=True)
                 self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
                 self.tmpsize=int((self.data).headers['content-length'])
                 self.start("D","anonfiles")
-
+    def bayfiles(self):
+        try: 
+            u=lh.fromstring(r.get(self.url,headers={"User-Agent":ua.get()}).text,"html.parser").xpath('//*[@id="download-url"]/@href')[0]
+        except IndexError:
+            print(f'{re}> [X] File not found')
+            sys.exit()
+        if self.direct == True:
+            print(f"Link : {cy}{u}")
+        else:
+            if self.resume == True:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive","Range":f"bytes={str(self.downloaded)}-"}, stream=True)
+                self.start("R","bayfiles")
+            else:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"}, stream=True)
+                self.name=ru.findall('filename="(.+)"',(self.data).headers['Content-Disposition'])[0]
+                self.tmpsize=int((self.data).headers['content-length'])
+                self.start("D","bayfiles")
 #MAIN
 def main():
     arg=len(sys.argv)
@@ -280,10 +297,10 @@ def main():
             dl(sys.argv[3], direct, False).tusfiles()
         elif sys.argv[2] == "anonfiles":
             start()
-            anonfiles(sys.argv[3], direct, False)
-        elif sys.argv[2] == "zippyshare":
+            dl(sys.argv[3], direct, False).anonfiles()
+        elif sys.argv[2] == "bayfiles":
             start()
-            zippyshare(sys.argv[3], direct, False)
+            dl(sys.argv[3], direct, False).bayfiles()
         else:
             print(f"{de}File Hosting Not Found")
     else:
