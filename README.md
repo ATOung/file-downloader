@@ -1,6 +1,6 @@
 # file-downloader
 ### INFO
-Made with Python 3.8.6 in Windows
+Made with Python 3.8.10 in Windows
 
 Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 - -h    Show help
