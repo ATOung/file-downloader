@@ -6,11 +6,6 @@ try:
 except ModuleNotFoundError:
     print("Install required package with 'pip install -r requirements.txt'")
     sys.exit(1)
-try:
-    import google.colab
-    COLAB = True
-except:
-    COLAB = False
 if sys.version_info[0] == 3: pass
 else:
     print("Run with python3!")
@@ -20,10 +15,12 @@ else:
 setting=json.load(open("config.json","r"))
 tmp=setting["tmp_location"]
 complete=setting['complete_location']
-if tmp[-1:] == "/":
-    tmp=tmp[:-1]
-if complete[-1:] == "/":
-    complete=complete[:-1]
+if tmp[-1:] == "/": tmp=tmp[:-1]
+if complete[-1:] == "/": complete=complete[:-1]
+if os.path.isdir(tmp): pass
+else: os.mkdir(tmp)
+if os.path.isdir(complete): pass
+else: os.mkdir(complete)
 
 #COLOR CODE
 if platform.system() == 'Windows':
@@ -136,8 +133,9 @@ class dl:
         shutil.move(rf'{tmp}/{self.name}',rf"{complete}/{self.name}")
 
     def start(self,s,p):
+        size=self.getsize(self.tmpsize)
         print(f"""{de}> [INFO] Filename : {self.name}
-         Size : {self.size}""")
+         Size : {size}""")
         if s=="D":
             with open(f"{tmp}/{self.name}", "wb") as f:
                 print(f"{ye}> [Starting] Downloading")
@@ -199,7 +197,6 @@ class dl:
             else:
                 self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
                 self.tmpsize=int((self.data).headers['content-length'])
-                self.size=self.getsize(self.tmpsize)
                 self.name=ru.findall('filename="(.+)"',(self.data).headers['Content-Disposition'])[0]
                 self.start("D","mediafire")
 
@@ -221,7 +218,6 @@ class dl:
             else:
                 self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
                 self.tmpsize=int((self.data).headers['content-length'])
-                self.size=self.getsize(self.tmpsize)
                 self.name=r.utils.unquote(u.split('/')[-1])
                 self.start("D","solidfiles")
 
@@ -244,7 +240,6 @@ class dl:
                 self.data=r.get(html1.headers['location'],headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
                 self.name=html1.headers['location'].split("/")[-1]
                 self.tmpsize=int((self.data).headers['content-length'])
-                self.size=self.getsize(self.tmpsize)
                 self.start("D","tusfiles")
 
     def anonfiles(self):
@@ -264,7 +259,6 @@ class dl:
                 self.data=r.get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"}, stream=True)
                 self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
                 self.tmpsize=int((self.data).headers['content-length'])
-                self.size=self.getsize(self.tmpsize)
                 self.start("D","anonfiles")
 
 #MAIN
