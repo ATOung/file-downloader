@@ -1,8 +1,29 @@
+#IMPORT MODULE
+import random as ra,sys,platform,re as ru,time,os,json,shutil
 try:
     from bs4 import BeautifulSoup as Bs
-    import requests as r,random as ra,lxml.html as lh,sys,platform,re as ru,time,os
+    import requests as r,lxml.html as lh
 except ModuleNotFoundError:
     print("Install required package with 'pip install -r requirements.txt'")
+    sys.exit(1)
+try:
+    import google.colab
+    COLAB = True
+except:
+    COLAB = False
+if sys.version_info[0] == 3: pass
+else:
+    print("Run with python3!")
+    sys.exit(1)
+
+#SETTING
+setting=json.load(open("config.json","r"))
+tmp=setting["tmp_location"]
+complete=setting['complete_location']
+if tmp[-1:] == "/":
+    tmp=tmp[:-1]
+if complete[-1:] == "/":
+    complete=complete[:-1]
 
 #COLOR CODE
 if platform.system() == 'Windows':
@@ -18,6 +39,7 @@ if platform.system() == 'Windows':
         clear="cls"
     except ModuleNotFoundError:
         print("Install colorama with 'pip install colorama'")
+        sys.exit()
 else:
     re="\033[1;31m"
     gr="\033[1;32m"
@@ -27,16 +49,10 @@ else:
     de="\033[1;0m"
     clear="clear"
 
-#USER AGENT 
-ua=[
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51",
-'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15',
-'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
-]
+#USER AGENT
+class ua:
+    def get():
+        return ra.choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51",'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'])
 
 #CONNECTION TEST
 def test():
@@ -71,64 +87,68 @@ def start():
     os.system(clear)
     banner()
 
-#PAUSED DOWNLOADED
-def paused(provider, downloaded, url, size, name):
-    print(f"{gr}\r\n> Download paused. Resume or Exit (r/e)?")
-    ask=input("> ")
-    if ask.lower() == "r" or ask.lower() == "resume" or ask.lower() == "y":
-        if provider == "mediafire":
-            os.system(clear)
-            banner()
-            mediafire(url, False, True, downloaded=downloaded, tmpsize=size, name=name)
-        elif provider == "solidfiles":
-            os.system(clear)
-            banner()
-            solidfiles(url, False, True, downloaded=downloaded, tmpsize=size, name=name)
-        elif provider == "tusfiles":
-            os.system(clear)
-            banner()
-            tusfiles(url, False, True, downloaded=downloaded, tmpsize=size, name=name)
-        elif provider == "anonfiles":
-            os.system(clear)
-            banner()
-            anonfiles(url, False, True, downloaded=downloaded, tmpsize=size, name=name)
-    else:
-        os.remove(name)
-        print(f"{re}> {ma}File {cy}{name} {ma}removed")
-
 #MEDIAFIRE
-def mediafire(url, direct, resume, downloaded=0, tmpsize=0, name=""):
-    html=r.get(url,headers={"User-Agent":ra.choice(ua)}).text
-    try:
-        u=lh.fromstring(html).xpath('//*[@id="downloadButton"]/@href')[0]
-    except IndexError:
-        print(f'{re}> [X] File not found')
-        sys.exit()
-    if direct == True:
-        print(f"Link : {cy}{u}")
-    else:
-        if resume == True:
-            data=r.Session().get(u,headers={"User-Agent":ra.choice(ua),"Range":f"bytes={str(downloaded)}-","Connection":"keep-alive"},stream=True)
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "ab") as f:
-                print(f"{ye}> [Resume] Resuming...")
-                tl=int(data.headers['content-length'])
+class dl:
+    def __init__(self, url, direct, resume):
+        self.url=url
+        self.direct=direct
+        self.resume=resume
+
+    def getsize(self, a):
+        if a < 1024:
+            return str(a) + " Bytes"
+        elif 1024 <= a < 1048576:
+            return str(round(a / 1024, 2)) + " KB"
+        elif 1048576 <= a < 1073741824:
+            return str(round(a / 1048576, 2)) + " MB"
+        elif 1073741824 <= a :
+            return str(round(a / 1073741824, 2)) + " GB"
+
+    def paused(self, provider, downloaded):
+        self.downloaded=downloaded
+        print(f"{gr}\r\n> Download paused. Resume or Exit (r/e)?")
+        ask=input("> ")
+        if ask.lower() == "r" or ask.lower() == "resume" or ask.lower() == "y":
+            self.direct=False
+            self.resume=True
+            if provider == "mediafire":
+                os.system(clear)
+                banner()
+                self.mediafire()
+            elif provider == "solidfiles":
+                os.system(clear)
+                banner()
+                self.solidfiles()
+            elif provider == "tusfiles":
+                os.system(clear)
+                banner()
+                self.tusfiles()
+            elif provider == "anonfiles":
+                os.system(clear)
+                banner()
+                self.anonfiles()
+        else:
+            os.remove(f"{tmp}/{self.name}")
+            print(f"{re}> {ma}File {cy}{self.name} {ma}removed")
+            sys.exit()
+
+    def finish(self):
+        shutil.move(rf'{tmp}/{self.name}',rf"{complete}/{self.name}")
+
+    def start(self,s,p):
+        print(f"""{de}> [INFO] Filename : {self.name}
+         Size : {self.size}""")
+        if s=="D":
+            with open(f"{tmp}/{self.name}", "wb") as f:
+                print(f"{ye}> [Starting] Downloading")
+                tl=self.tmpsize
                 dl=0
                 now=time.time()
                 try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
+                    for l in (self.data).iter_content(chunk_size=int(tl/100)):
                         speed=time.time() - now
                         dl += len(l)
-                        done = int(100 * (dl+downloaded) / tmpsize)
+                        done=int(100 * dl / tl)
                         try:
                             sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps") 
                         except:
@@ -136,293 +156,116 @@ def mediafire(url, direct, resume, downloaded=0, tmpsize=0, name=""):
                         f.write(l)
                         sys.stdout.flush()
                     f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
+                    self.finish()
+                    print(f"\r\n{gr}> [Finished] Success download {self.name}")
                 except KeyboardInterrupt:
                     f.close()
-                    paused("mediafire",os.path.getsize(name),url,tmpsize, name)
-
-        else:
-            data=r.Session().get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"},stream=True)
-            tmpsize=int(data.headers['content-length'])
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "wb") as f:
-                print(f"{ye}> [Starting] Downloading")
-                tl=int(data.headers['content-length'])
-                dl=0
-                now=time.time()
-                try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
-                        speed=time.time() - now
-                        dl += len(l)
-                        done = int(100 * dl / tl)
-                        try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps") 
-                        except:
-                            pass
-                        f.write(l)
-                        sys.stdout.flush()
-                    f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
-                except KeyboardInterrupt:
-                    f.close()
-                    paused("mediafire",os.path.getsize(name),url,tmpsize, name)
-
-#SOLIDFILES
-def solidfiles(url, direct, resume, downloaded=0, tmpsize=0, name=""):
-    html=r.get(url,headers={"User-Agent":ra.choice(ua)}).text
-    try:
-        v1=lh.fromstring(html).xpath('//*[@id="content"]/div/div[2]/div[2]/article[1]/section[2]/div[1]/form/input[1]/@value')[0]
-        data="csrfmiddlewaretoken="+v1+"&referrer="
-        getform=Bs(html,'html.parser').find("div",{'class':"buttons"}).select("form")[0].get("action")
-        url="http://www.solidfiles.com"+getform
-    except IndexError:
-        print(f'{re}> [X] File not found')
-        sys.exit()
-    html1=r.post(url,headers={"User-Agent":ra.choice(ua)},data=data).text
-    u=lh.fromstring(html1).xpath('//*[@id="content"]/div/div[2]/div[2]/article[1]/section/p/a/@href')[0]
-    if direct == True:
-        print(f"Link : {cy}{u}")
-    else:
-        if resume == True:
-            data=r.Session().get(u,headers={"User-Agent":ra.choice(ua),"Range":f"bytes={str(downloaded)}-","Connection":"keep-alive"},stream=True)
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "ab") as f:
+                    self.paused(p,os.path.getsize(f"{tmp}/{self.name}"))
+        elif s=="R":
+            with open(f"{tmp}/{self.name}", "ab") as f:
                 print(f"{ye}> [Resume] Resuming...")
-                tl=int(data.headers['content-length'])
+                tl=int((self.data).headers['content-length'])
                 dl=0
                 now=time.time()
                 try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
+                    for l in (self.data).iter_content(chunk_size=int(tl/100)):
                         speed=time.time() - now
                         dl += len(l)
-                        done = int(100 * (dl+downloaded) / tmpsize)
                         try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
+                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(int(100 * (dl+self.downloaded) / self.tmpsize))+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps") 
                         except:
                             pass
                         f.write(l)
                         sys.stdout.flush()
                     f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
+                    self.finish()
+                    print(f"\r\n{gr}> [Finished] Success download {self.name}")
                 except KeyboardInterrupt:
                     f.close()
-                    paused("solidfiles",os.path.getsize(name),url,tmpsize, name)
-        else:
-            data=r.Session().get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"},stream=True)
-            tmpsize=int(data.headers['content-length'])
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            name=r.utils.unquote(u.split('/')[-1])
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "wb") as f:
-                print(f"{ye}> [Starting] Downloading")
-                tl=int(data.headers['content-length'])
-                dl=0
-                now=time.time()
-                try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
-                        speed=time.time() - now
-                        dl += len(l)
-                        done = int(100 * dl / tl)  
-                        try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
-                        except:
-                            pass
-                        f.write(l)
-                        sys.stdout.flush()
-                    f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
-                except KeyboardInterrupt:
-                    f.close()
-                    paused("solidfiles",os.path.getsize(name),url,tmpsize, name)
+                    self.paused(p,os.path.getsize(f"{tmp}/{self.name}"))
 
-#TUSFILES
-def tusfiles(url, direct, resume, downloaded=0, tmpsize=0, name=""):
-    html=r.get(url,headers={"User-Agent":ra.choice(ua)}).text
-    try:
-        tmp=Bs(str(Bs(html,"html.parser").find("form")),"html.parser").find_all("input")
-        v1=f"op={lh.fromstring(tmp[0].encode()).xpath('//input/@value')[0]}&id={lh.fromstring(tmp[1].encode()).xpath('//input/@value')[0]}&rand={lh.fromstring(tmp[2].encode()).xpath('//input/@value')[0]}&referer={lh.fromstring(tmp[3].encode()).xpath('//input/@value')[0]}&method_free=&method_premium=1"
-    except IndexError:
-        print(f'{re}> [X] File not found')
-        sys.exit()
-    html1=r.post(url,headers={"User-Agent":ra.choice(ua)},data=v1,allow_redirects=False)
-    if direct == True:
-        print(f"Link : {cy}{html1.headers['location']}")
-    else:
-        if resume == True:
-            data=r.get(html1.headers['location'],headers={"User-Agent":ra.choice(ua),"Range":f"bytes={str(downloaded)}-","Connection":"keep-alive"},stream=True)
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "ab") as f:
-                print(f"{ye}> [Resume] Resuming...")
-                tl=int(data.headers['content-length'])
-                dl=0
-                now=time.time()
-                try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
-                        speed=time.time() - now
-                        dl += len(l)
-                        done = int(100 * (dl+downloaded) / tmpsize)
-                        try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
-                        except:
-                            pass
-                        f.write(l)
-                        sys.stdout.flush()
-                    f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
-                except KeyboardInterrupt:
-                    f.close()
-                    paused("tusfiles",os.path.getsize(name),url,tmpsize, name)
+    def mediafire(self):
+        try:
+            u=lh.fromstring(r.get(self.url,headers={"User-Agent":ua.get()}).text).xpath('//*[@id="downloadButton"]/@href')[0]
+        except IndexError:
+            print(f'{re}> [X] File not found')
+            sys.exit()
+        if self.direct:
+            print(f"Link : {cy}{u}")
         else:
-            data=r.get(html1.headers['location'],headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"},stream=True)
-            name=html1.headers['location'].split("/")[-1]
-            tmpsize=int(data.headers['content-length'])
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "wb") as f:
-                print(f"{ye}> [Starting] Downloading")
-                tl=int(data.headers['content-length'])
-                dl=0
-                now=time.time()
-                try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
-                        speed=time.time() - now
-                        dl += len(l)
-                        done = int(100 * dl / tl)
-                        try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
-                        except:
-                            pass
-                        f.write(l)
-                        sys.stdout.flush()
-                    f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
-                except KeyboardInterrupt:
-                    f.close()
-                    paused("tusfiles",os.path.getsize(name),url,tmpsize, name)
+            if self.resume:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
+                self.start('R',"mediafire")
+            else:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
+                self.tmpsize=int((self.data).headers['content-length'])
+                self.size=self.getsize(self.tmpsize)
+                self.name=ru.findall('filename="(.+)"',(self.data).headers['Content-Disposition'])[0]
+                self.start("D","mediafire")
 
-#ANONFILES
-def anonfiles(url, direct, resume, downloaded=0, tmpsize=0, name=""):
-    html=r.get(url,headers={"User-Agent":ra.choice(ua)}).text
-    try:
-        u=lh.fromstring(html).xpath('//*[@id="download-url"]/@href')[0]
-    except IndexError:
-        print(f'{re}> [X] File not found')
-        sys.exit()
-    if direct == True:
-        print(f"Link : {cy}{u}")
-    else:
-        if resume == True:
-            data=r.get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"}, stream=True)
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "ab") as f:
-                print(f"{ye}> [Resume] Resuming...")
-                tl=int(data.headers['content-length'])
-                dl=0
-                now=time.time()
-                try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
-                        speed=time.time() - now
-                        dl += len(l)
-                        done = int(100 * (dl+downloaded) / tmpsize)
-                        try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
-                        except:
-                            pass
-                        f.write(l)
-                        sys.stdout.flush()
-                    f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
-                except KeyboardInterrupt:
-                    f.close()
-                    paused("anonfiles",os.path.getsize(name),url,tmpsize, name)
+    def solidfiles(self):
+        html=r.get(self.url,headers={"User-Agent":ua.get()}).text
+        try:
+            d="csrfmiddlewaretoken="+lh.fromstring(html).xpath('//*[@id="content"]/div/div[2]/div[2]/article[1]/section[2]/div[1]/form/input[1]/@value')[0]+"&referrer="
+            u="http://www.solidfiles.com"+Bs(html,'html.parser').find("div",{'class':"buttons"}).select("form")[0].get("action")
+        except IndexError:
+            print(f'{re}> [X] File not found')
+            sys.exit()
+        u=lh.fromstring(r.post(u,headers={"User-Agent":ua.get()},data=d).text).xpath('//*[@id="content"]/div/div[2]/div[2]/article[1]/section/p/a/@href')[0]
+        if self.direct == True:
+            print(f"Link : {cy}{u}")
         else:
-            data=r.get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"}, stream=True)
-            name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
-            tmpsize=int(data.headers['content-length'])
-            if tmpsize < 1024:
-                size=str(tmpsize) + " Bytes"
-            elif 1024 <= tmpsize < 1048576:
-                size=str(round(tmpsize / 1024, 2)) + " KB"
-            elif 1048576 <= tmpsize < 1073741824:
-                size=str(round(tmpsize / 1048576, 2)) + " MB"
-            elif 1073741824 <= tmpsize :
-                size=str(round(tmpsize / 1073741824, 2)) + " GB"
-            print(f"""{de}> [INFO] Filename : {name}
-         Size : {size}""")
-            with open(name, "wb") as f:
-                print(f"{ye}> [Starting] Downloading")
-                tl=int(data.headers['content-length'])
-                dl=0
-                now=time.time()
-                try:
-                    for l in data.iter_content(chunk_size=int(tl/100)):
-                        speed=time.time() - now
-                        dl += len(l)
-                        done = int(100 * dl / tl)
-                        try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
-                        except:
-                            pass
-                        f.write(l)
-                        sys.stdout.flush()
-                    f.close()
-                    print(f"\r\n{gr}> [Finished] Success download {name}")
-                except KeyboardInterrupt:
-                    f.close()
-                    paused("anonfiles",os.path.getsize(name),url,tmpsize, name)
+            if self.resume == True:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
+                self.start('R',"solidfiles")
+            else:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
+                self.tmpsize=int((self.data).headers['content-length'])
+                self.size=self.getsize(self.tmpsize)
+                self.name=r.utils.unquote(u.split('/')[-1])
+                self.start("D","solidfiles")
+
+    def tusfiles(self):
+        html=r.get(self.url,headers={"User-Agent":ua.get()}).text
+        try:
+            tmp=Bs(str(Bs(html,"html.parser").find("form")),"html.parser").find_all("input")
+            v1=f"op={lh.fromstring(tmp[0].encode()).xpath('//input/@value')[0]}&id={lh.fromstring(tmp[1].encode()).xpath('//input/@value')[0]}&rand={lh.fromstring(tmp[2].encode()).xpath('//input/@value')[0]}&referer={lh.fromstring(tmp[3].encode()).xpath('//input/@value')[0]}&method_free=&method_premium=1"
+        except IndexError:
+            print(f'{re}> [X] File not found')
+            sys.exit()
+        html1=r.post(self.url,headers={"User-Agent":ua.get()},data=v1,allow_redirects=False)
+        if self.direct == True:
+            print(f"Link : {cy}{html1.headers['location']}")
+        else:
+            if self.resume == True:
+                self.data=r.get(html1.headers['location'],headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
+                self.start("R",'tusfiles')
+            else:
+                self.data=r.get(html1.headers['location'],headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
+                self.name=html1.headers['location'].split("/")[-1]
+                self.tmpsize=int((self.data).headers['content-length'])
+                self.size=self.getsize(self.tmpsize)
+                self.start("D","tusfiles")
+
+    def anonfiles(self):
+        html=r.get(self.url,headers={"User-Agent":ua.get()}).text
+        try:
+            u=lh.fromstring(html).xpath('//*[@id="download-url"]/@href')[0]
+        except IndexError:
+            print(f'{re}> [X] File not found')
+            sys.exit()
+        if self.direct == True:
+            print(f"Link : {cy}{u}")
+        else:
+            if self.resume == True:
+                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive","Range":f"bytes={str(self.downloaded)}-"}, stream=True)
+                self.start("R","anonfiles")
+            else:
+                self.data=r.get(u,headers={"User-Agent":ra.choice(ua),"Connection":"keep-alive"}, stream=True)
+                self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+                self.tmpsize=int((self.data).headers['content-length'])
+                self.size=self.getsize(self.tmpsize)
+                self.start("D","anonfiles")
 
 #MAIN
 def main():
@@ -434,16 +277,19 @@ def main():
             direct=False
         if sys.argv[2] == "mediafire":
             start()
-            mediafire(sys.argv[3], direct, False)
+            dl(sys.argv[3], direct, False).mediafire()
         elif sys.argv[2] == "solidfiles":
             start()
-            solidfiles(sys.argv[3], direct, False)
+            dl(sys.argv[3], direct, False).solidfiles()
         elif sys.argv[2] == "tusfiles":
             start()
-            tusfiles(sys.argv[3], direct, False)
+            dl(sys.argv[3], direct, False).tusfiles()
         elif sys.argv[2] == "anonfiles":
             start()
             anonfiles(sys.argv[3], direct, False)
+        elif sys.argv[2] == "zippyshare":
+            start()
+            zippyshare(sys.argv[3], direct, False)
         else:
             print(f"{de}File Hosting Not Found")
     else:
