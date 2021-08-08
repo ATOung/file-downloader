@@ -262,7 +262,7 @@ class dl:
                 self.tmpsize=int((self.data).headers['content-length'])
                 self.start("D","anonfiles")
     def bayfiles(self):
-        try: 
+        try:
             u=lh.fromstring(r.get(self.url,headers={"User-Agent":ua.get()}).text,"html.parser").xpath('//*[@id="download-url"]/@href')[0]
         except IndexError:
             print(f'{re}> [X] File not found')
@@ -306,7 +306,7 @@ def main():
     else:
         print(f'''{de}Usage : python {sys.argv[0]} [option] [url] [optional option]
   -h    Show help
-  -p    mediafire, solidfiles, tusfiles, anonfiles
+  -p    mediafire, solidfiles, tusfiles, anonfiles, bayfiles
   Optional options:
     -grabdirectlink  Get direct download link only''')
 
