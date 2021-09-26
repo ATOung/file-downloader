@@ -1,8 +1,11 @@
+"""File Downloader from python"""
+"""Don't steal any code from this script"""
 #IMPORT MODULE
-import random as ra,sys,platform,re as ru,time,os,json,shutil
+from random import choice
+import sys,platform,re as ru,time,os,json,shutil
 try:
-    from bs4 import BeautifulSoup as Bs
-    import requests as r,lxml.html as lh
+    from lxml.html import fromstring as fr
+    import requests as r
 except ModuleNotFoundError:
     print("Install required package with 'pip install -r requirements.txt'")
     sys.exit(1)
@@ -49,7 +52,7 @@ else:
 #USER AGENT
 class ua:
     def get():
-        return ra.choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51",'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'])
+        return choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51",'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'])
 
 #CONNECTION TEST
 def test():
@@ -57,13 +60,13 @@ def test():
     start=time.time()
     r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080",headers={"Accept-Encoding":"gzip, compress, br"})
     ping=int((round(time.time() - start, 3))*1000)
-    if ping < 500: print(f"{gr}[G] Your connection is good | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
-    elif 500 <= ping < 1000: print(f"{ye}[N] Your connection is normal | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
-    else: print(f"{re}[B] Your connection is bad | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    if ping < 500: return print(f"{gr}[G] Your connection is good | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    elif 500 <= ping < 1000: return print(f"{ye}[N] Your connection is normal | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    else: return print(f"{re}[B] Your connection is bad | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
 
 #BANNER
 def banner():
-    print(f"""{de} ______ _ _         _____  _      
+    return print(f"""{de} ______ _ _         _____  _      
 |  ____(_) |       |  __ \| |     
 | |__   _| | ___   | |  | | |     
 |  __| | | |/ _ \  | |  | | |     
@@ -80,6 +83,7 @@ def start():
     time.sleep(2)
     os.system(clear)
     banner()
+    return
 
 #MEDIAFIRE
 class dl:
@@ -87,6 +91,7 @@ class dl:
         self.url=url
         self.direct=direct
         self.resume=resume
+        self.downloaded=0
 
     def getsize(self, a):
         if a < 1024:
@@ -105,30 +110,25 @@ class dl:
         if ask.lower() == "r" or ask.lower() == "resume" or ask.lower() == "y":
             self.direct=False
             self.resume=True
+            os.system(clear)
+            banner()
             if provider == "mediafire":
-                os.system(clear)
-                banner()
                 self.mediafire()
             elif provider == "solidfiles":
-                os.system(clear)
-                banner()
                 self.solidfiles()
             elif provider == "tusfiles":
-                os.system(clear)
-                banner()
                 self.tusfiles()
             elif provider == "anonfiles":
-                os.system(clear)
-                banner()
                 self.anonfiles()
             elif provider == "bayfiles":
-                os.system(clear)
-                banner()
                 self.bayfiles()
+            elif provider == "racaty":
+                self.racaty()
+            elif provider== "zippyshare":
+                self.zippyshare()
         else:
             os.remove(f"{tmp}/{self.name}")
-            print(f"{re}> {ma}File {cy}{self.name} {ma}removed")
-            sys.exit()
+            return print(f"{re}> {ma}File {cy}{self.name} {ma}removed")
 
     def finish(self):
         shutil.move(rf'{tmp}/{self.name}',rf"{complete}/{self.name}")
@@ -138,18 +138,19 @@ class dl:
         print(f"""{de}> [INFO] Filename : {self.name}
          Size : {size}""")
         if s=="D":
+            data=r.Session().get(self.u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
             with open(f"{tmp}/{self.name}", "wb") as f:
                 print(f"{ye}> [Starting] Downloading")
                 tl=self.tmpsize
                 dl=0
                 now=time.time()
                 try:
-                    for l in (self.data).iter_content(chunk_size=int(tl/100)):
+                    for l in data.iter_content(chunk_size=int(tl/100)):
                         speed=time.time() - now
                         dl += len(l)
                         done=int(100 * dl / tl)
                         try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps") 
+                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
                         except:
                             pass
                         f.write(l)
@@ -161,17 +162,18 @@ class dl:
                     f.close()
                     self.paused(p,os.path.getsize(f"{tmp}/{self.name}"))
         elif s=="R":
+            data=r.Session().get(self.u,headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
             with open(f"{tmp}/{self.name}", "ab") as f:
                 print(f"{ye}> [Resume] Resuming...")
-                tl=int((self.data).headers['content-length'])
+                tl=int(data.headers['content-length'])
                 dl=0
                 now=time.time()
                 try:
-                    for l in (self.data).iter_content(chunk_size=int(tl/100)):
+                    for l in data.iter_content(chunk_size=int(tl/100)):
                         speed=time.time() - now
                         dl += len(l)
                         try:
-                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(int(100 * (dl+self.downloaded) / self.tmpsize))+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps") 
+                            sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(int(100 * (dl+self.downloaded) / self.tmpsize))+"% | Speed: "+str(int(dl / speed / 1000)) + " Kbps")
                         except:
                             pass
                         f.write(l)
@@ -182,131 +184,176 @@ class dl:
                 except KeyboardInterrupt:
                     f.close()
                     self.paused(p,os.path.getsize(f"{tmp}/{self.name}"))
+        return
 
     def mediafire(self):
         try:
-            u=lh.fromstring(r.get(self.url,headers={"User-Agent":ua.get()}).text).xpath('//*[@id="downloadButton"]/@href')[0]
+            self.u=fr(r.get(self.url,headers={"User-Agent":ua.get()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
         except IndexError:
-            print(f'{re}> [X] File not found')
-            sys.exit()
+            return print(f'{re}> [X] File not found')
         if self.direct:
-            print(f"Link : {cy}{u}")
+            return print(f"Link : {cy}{self.u}")
         else:
             if self.resume:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
                 self.start('R',"mediafire")
             else:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
-                self.tmpsize=int((self.data).headers['content-length'])
-                self.name=ru.findall('filename="(.+)"',(self.data).headers['Content-Disposition'])[0]
+                data=r.head(self.u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"})
+                self.tmpsize=int(data.headers['content-length'])
+                self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
                 self.start("D","mediafire")
+        return
 
     def solidfiles(self):
         html=r.get(self.url,headers={"User-Agent":ua.get()}).text
         try:
-            d="csrfmiddlewaretoken="+lh.fromstring(html).xpath('//*[@id="content"]/div/div[2]/div[2]/article[1]/section[2]/div[1]/form/input[1]/@value')[0]+"&referrer="
-            u="http://www.solidfiles.com"+Bs(html,'html.parser').find("div",{'class':"buttons"}).select("form")[0].get("action")
+            tmplh=fr(html)
+            d="csrfmiddlewaretoken="+tmplh.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
+            self.u=r.post("http://www.solidfiles.com"+tmplh.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua.get()},data=d).text
+            self.u=ru.findall('url=(.+)',fr(self.u).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
         except IndexError:
-            print(f'{re}> [X] File not found')
-            sys.exit()
-        u=lh.fromstring(r.post(u,headers={"User-Agent":ua.get()},data=d).text).xpath('//*[@id="content"]/div/div[2]/div[2]/article[1]/section/p/a/@href')[0]
-        if self.direct == True:
-            print(f"Link : {cy}{u}")
+            return print(f'{re}> [X] File not found')
+        if self.direct:
+            return print(f"Link : {cy}{self.u}")
         else:
-            if self.resume == True:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
+            if self.resume:
                 self.start('R',"solidfiles")
             else:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
-                self.tmpsize=int((self.data).headers['content-length'])
-                self.name=r.utils.unquote(u.split('/')[-1])
+                data=r.head(self.u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"})
+                self.tmpsize=int(data.headers['content-length'])
+                self.name=r.utils.unquote((self.u).split('/')[-1])
                 self.start("D","solidfiles")
+        return
 
     def tusfiles(self):
         html=r.get(self.url,headers={"User-Agent":ua.get()}).text
         try:
-            tmp=Bs(str(Bs(html,"html.parser").find("form")),"html.parser").find_all("input")
-            v1=f"op={lh.fromstring(tmp[0].encode()).xpath('//input/@value')[0]}&id={lh.fromstring(tmp[1].encode()).xpath('//input/@value')[0]}&rand={lh.fromstring(tmp[2].encode()).xpath('//input/@value')[0]}&referer={lh.fromstring(tmp[3].encode()).xpath('//input/@value')[0]}&method_free=&method_premium=1"
+            tmplh=fr(html).xpath("//form[@method=\"POST\"]/input/@value")
+            d=f"op={tmplh[0]}&id={tmplh[1]}&rand={tmplh[2]}&referer=&method_free=&method_premium=1"
+            self.u=r.post(self.url,headers={"User-Agent":ua.get()},data=d,allow_redirects=False).headers["location"]
         except IndexError:
-            print(f'{re}> [X] File not found')
-            sys.exit()
-        html1=r.post(self.url,headers={"User-Agent":ua.get()},data=v1,allow_redirects=False)
-        if self.direct == True:
-            print(f"Link : {cy}{html1.headers['location']}")
+            return print(f'{re}> [X] File not found')
+        if self.direct:
+            return print(f"Link : {cy}{self.u}")
         else:
-            if self.resume == True:
-                self.data=r.get(html1.headers['location'],headers={"User-Agent":ua.get(),"Range":f"bytes={str(self.downloaded)}-","Connection":"keep-alive"},stream=True)
+            if self.resume:
                 self.start("R",'tusfiles')
             else:
-                self.data=r.get(html1.headers['location'],headers={"User-Agent":ua.get(),"Connection":"keep-alive"},stream=True)
-                self.name=html1.headers['location'].split("/")[-1]
-                self.tmpsize=int((self.data).headers['content-length'])
+                data=r.head(self.u,headers={"User-Agent":ua.get(),"Connection":"Keep-Alive"})
+                self.name=(self.u).split("/")[-1]
+                self.tmpsize=int(data.headers['content-length'])
                 self.start("D","tusfiles")
+        return
 
     def anonfiles(self):
         html=r.get(self.url,headers={"User-Agent":ua.get()}).text
         try:
-            u=lh.fromstring(html).xpath('//*[@id="download-url"]/@href')[0]
+            self.u=fr(html).xpath('//a[@id=\"download-url\"]/@href')[0]
         except IndexError:
-            print(f'{re}> [X] File not found')
-            sys.exit()
-        if self.direct == True:
-            print(f"Link : {cy}{u}")
+            return print(f'{re}> [X] File not found')
+        if self.direct:
+            print(f"Link : {cy}{self.u}")
         else:
-            if self.resume == True:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive","Range":f"bytes={str(self.downloaded)}-"}, stream=True)
+            if self.resume:
                 self.start("R","anonfiles")
             else:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"}, stream=True)
+                data=r.head(self.u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"})
                 self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
-                self.tmpsize=int((self.data).headers['content-length'])
+                self.tmpsize=int(data.headers['content-length'])
                 self.start("D","anonfiles")
+        return
+
     def bayfiles(self):
         try:
-            u=lh.fromstring(r.get(self.url,headers={"User-Agent":ua.get()}).text,"html.parser").xpath('//*[@id="download-url"]/@href')[0]
+            self.u=fr(r.get(self.url,headers={"User-Agent":ua.get()}).text).xpath('//a[@id="download-url"]/@href')[0]
         except IndexError:
-            print(f'{re}> [X] File not found')
-            sys.exit()
-        if self.direct == True:
-            print(f"Link : {cy}{u}")
+            return print(f'{re}> [X] File not found')
+        if self.direct:
+            return print(f"Link : {cy}{self.u}")
         else:
-            if self.resume == True:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive","Range":f"bytes={str(self.downloaded)}-"}, stream=True)
+            if self.resume:
                 self.start("R","bayfiles")
             else:
-                self.data=r.get(u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"}, stream=True)
-                self.name=ru.findall('filename="(.+)"',(self.data).headers['Content-Disposition'])[0]
-                self.tmpsize=int((self.data).headers['content-length'])
+                data=r.head(self.u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"})
+                self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+                self.tmpsize=int(data.headers['content-length'])
                 self.start("D","bayfiles")
-#MAIN
+        return
+
+    def racaty(self):
+        html=r.get(self.url,headers={"User-Agent":ua.get()}).text
+        try:
+            tmplh=fr(html).xpath("//form[@id=\"getExtoken\"]/input/@value")
+            d=f"op={tmplh[0]}&id={tmplh[1]}&rand={tmplh[2]}&referer=&method_free&method_premium=1"
+            self.u=r.post(self.url,headers={"User-Agent":ua.get()},data=d).text
+            self.u=fr(self.u).xpath("//div[@class=\'retryDl small mt-2\']/a/@href")[0]
+        except IndexError:
+            return print(f'{re}> [X] File not found')
+        if self.direct:
+            return print(f"Link : {cy}{self.u}")
+        else:
+            if self.resume:
+                self.start("R","racaty")
+            else:
+                data=r.head(self.u,headers={"User-Agent":ua.get(),"Connection":"keep-alive"})
+                self.name=(self.u).split("/")[-1]
+                self.tmpsize=int(data.headers['content-length'])
+                self.start("D","racaty")
+        return
+
+    def zippyshare(self):
+        html=r.get(self.url,headers={"User-Agent":ua.get()}).text
+        try:
+            self.u=fr(html).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1]
+            self.u=ru.findall("= (.+);",self.u)[0]
+            tmpvar="'"+str(eval(ru.findall("\+ (.+) \+",self.u)[0]))+"'"
+            self.u="https://"+(self.url).split("/")[2]+eval(ru.sub("(\(.+\))",tmpvar,self.u))
+        except IndexError:
+             return print(f'{re}> [X] File not found')
+        if self.direct:
+            return print(f"Link : {cy}{self.u}")
+        else:
+            if self.resume:
+                self.start("R","zippyshare")
+            else:
+                data=r.Session().head(self.u,headers={"User-Agent":ua.get()})
+                self.name=r.utils.unquote(ru.findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
+                self.tmpsize=int(data.headers['content-length'])
+                self.start("D","zippyshare")
+        return
+
 def main():
+    """Main Function"""
     arg=len(sys.argv)
     if arg > 3 and sys.argv[1] == "-p":
-        if arg > 4 and sys.argv[4] == "-grabdirectlink":
-            direct=True
-        else:
-            direct=False
+        direct=bool(arg > 4 and sys.argv[4] == "-grabdirectlink")
+        start()
         if sys.argv[2] == "mediafire":
-            start()
             dl(sys.argv[3], direct, False).mediafire()
+            return
         elif sys.argv[2] == "solidfiles":
-            start()
             dl(sys.argv[3], direct, False).solidfiles()
+            return
         elif sys.argv[2] == "tusfiles":
-            start()
             dl(sys.argv[3], direct, False).tusfiles()
+            return
         elif sys.argv[2] == "anonfiles":
-            start()
             dl(sys.argv[3], direct, False).anonfiles()
+            return
         elif sys.argv[2] == "bayfiles":
-            start()
             dl(sys.argv[3], direct, False).bayfiles()
+            return
+        elif sys.argv[2] == "racaty":
+            dl(sys.argv[3], direct, False).racaty()
+            return
+        elif sys.argv[2] == "zippyshare":
+            dl(sys.argv[3], direct, False).zippyshare()
+            return
         else:
-            print(f"{de}File Hosting Not Found")
+            return print(f"{de}File Hosting Not Found")
     else:
-        print(f'''{de}Usage : python {sys.argv[0]} [option] [url] [optional option]
+        return print(f'''{de}Usage : python {sys.argv[0]} [option] [url] [optional option]
   -h    Show help
-  -p    mediafire, solidfiles, tusfiles, anonfiles, bayfiles
+  -p    mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare
   Optional options:
     -grabdirectlink  Get direct download link only''')
 
