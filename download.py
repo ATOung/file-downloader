@@ -23,7 +23,7 @@ setting=json.load(open("config.json","r"))
 tmp=setting["tmp_location"]
 complete=setting['complete_location']
 chunk=setting["chunk_size"]
-if type(chunk) != int: raise ValueError("Chunk Size must be an integer")
+if not isinstance(chunk,int): raise ValueError("Chunk Size must be an integer")
 if tmp[-1:] == "/": tmp=tmp[:-1]
 if complete[-1:] == "/": complete=complete[:-1]
 if not os.path.isdir(tmp): os.mkdir(tmp)
@@ -53,10 +53,9 @@ else:
     de="\033[1;0m"
     clear="clear"
 
-#USER AGENT
 class ua:
-    def get():
-        return choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51",'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'])
+    """return random user agent"""
+    get=lambda: choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51",'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36','Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'])
 
 #CONNECTION TEST
 def test():
@@ -70,11 +69,11 @@ def test():
 
 #BANNER
 def banner():
-    print(rf"""{de} ______ _ _         _____  _      
-|  ____(_) |       |  __ \| |     
-| |__   _| | ___   | |  | | |     
-|  __| | | |/ _ \  | |  | | |     
-| |    | | |  __/  | |__| | |____ 
+    print(rf"""{de} ______ _ _         _____  _
+|  ____(_) |       |  __ \| |
+| |__   _| | ___   | |  | | |
+|  __| | | |/ _ \  | |  | | |
+| |    | | |  __/  | |__| | |____
 |_|    |_|_|\___   |_____/|______|
 Author : https://github.com/XniceCraft
 """)
@@ -317,8 +316,8 @@ class dl:
         try:
             self.u=fr(html).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1]
             self.u=ru.findall("= (.+);",self.u)[0]
-            tmpvar="'"+str(eval(ru.findall("\+ (.+) \+",self.u)[0]))+"'"
-            self.u="https://"+(self.url).split("/")[2]+eval(ru.sub("(\(.+\))",tmpvar,self.u))
+            tmpvar="'"+str(eval(ru.findall("\\+ (.+) \\+",self.u)[0]))+"'"
+            self.u="https://"+(self.url).split("/")[2]+eval(ru.sub("(\\(.+\\))",tmpvar,self.u))
         except IndexError:
             print(f"{re}[X] File not found")
             return
