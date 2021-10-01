@@ -19,13 +19,12 @@ Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 - Zippyshare
 
 ### Features
-- Download speed meter
+- Download speed meter (Updated every chunk size cycle)
 - Internet test
 - Pause (CTRL-C for pause)
+- Customized Chunk Size (Can be adjusted in config.json (Written in Kilobytes))
 
 ### Upcoming Features
-- Add support for more file hosting
 - Multithreaded download
-- Refresh internet speed every 1 second
 
 > Please report if there is a bug on this script
