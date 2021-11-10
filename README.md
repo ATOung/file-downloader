@@ -22,7 +22,7 @@ Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 
 ### Features
 - Download speed meter (Updated every chunk size cycle)
-- Internet ping test
+- Internet ping test (Based on singapore speedtest server)
 - Pause (CTRL-C for pause)
 - Customized Chunk Size (Can be adjusted in config.json (Written in Kilobytes))
 
