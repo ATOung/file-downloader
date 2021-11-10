@@ -1,10 +1,11 @@
 # file-downloader
+Last update : 10/11/2021
 ### INFO
-Made with Python 3.8.10 in Windows
+Built with : [Python3](https://www.python.org/)
 
 Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 - -h    Show help
-- -p    mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare
+- -p    mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare, hxfile
 
 -  Optional options:
    - -grabdirectlink  Get direct download link only
@@ -17,14 +18,15 @@ Usage : ```python download.py -p [file hosting] [url] [Optional option]```
 - Bayfiles
 - Racaty
 - Zippyshare
+- Hxfile
 
 ### Features
 - Download speed meter (Updated every chunk size cycle)
-- Internet test
+- Internet ping test
 - Pause (CTRL-C for pause)
 - Customized Chunk Size (Can be adjusted in config.json (Written in Kilobytes))
 
 ### Upcoming Features
-- Multithreaded download
+- Multithreaded download (tricky to implemented)
 
 > Please report if there is a bug on this script
