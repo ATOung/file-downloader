@@ -1,5 +1,6 @@
 {
     "tmp_location":"tmp",
     "complete_location":"complete",
-    "chunk_size":128
+    "chunk_size":128,
+    "thread_count":4
 }
