@@ -26,7 +26,7 @@ def banner():
 | |    | | |  __/  | |__| | |____
 |_|    |_|_|\___   |_____/|______|
 Author : https://github.com/XniceCraft
-"Warning!! you can't pause download while using multithreaded
+Warning!! you can't pause download while using multithreaded
 """)
 
 #GETFILESIZE
@@ -313,16 +313,6 @@ if __name__ == "__main__":
     else:
         print("Run with python3!")
         sys.exit(1)
-    tmp=get_setting()
-    complete=tmp[1]
-    chunk=tmp[2]
-    thread=tmp[3]
-    tmp=tmp[0]
-    if not isinstance(chunk,int): raise ValueError("Chunk Size must be an integer")
-    if tmp[-1:] == "/": tmp=tmp[:-1]
-    if complete[-1:] == "/": complete=complete[:-1]
-    if not os.path.isdir(tmp): os.mkdir(tmp)
-    if not os.path.isdir(complete): os.mkdir(complete)
 
     #COLOR CODE
     if ps() == 'Windows':
@@ -348,6 +338,20 @@ if __name__ == "__main__":
         de="\033[1;0m"
         clear="clear"
 
+    tmp=get_setting()
+    complete=tmp[1]
+    chunk=tmp[2]
+    thread=tmp[3]
+    tmp=tmp[0]
+    if not isinstance(chunk,int): raise ValueError("Chunk Size must be an integer")
+    if thread == 1 or thread > 8: 
+        print(f"{re}Error: {de}Please use thread value from 2 to 8")
+        sys.exit()
+    if tmp[-1:] == "/": tmp=tmp[:-1]
+    if complete[-1:] == "/": complete=complete[:-1]
+    if not os.path.isdir(tmp): os.mkdir(tmp)
+    if not os.path.isdir(complete): os.mkdir(complete)
+
     args=sys.argv
     arg=len(sys.argv)
     if arg > 3 and sys.argv[1] == "-p":
@@ -356,7 +360,6 @@ if __name__ == "__main__":
         try: 
             chunk=int(args[args.index("-c")+1]) if (True if "-c" in args else False) else chunk
         except IndexError: raise ValueError("You must specify the chunk size value") from None
-        except ValueError: raise ValueError("Chunk size must an integer!") from None
         if args[2] == "mediafire":
             dl(args[3], directdl).mediafire()
         elif args[2] == "solidfiles":
