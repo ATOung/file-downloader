@@ -1,5 +1,5 @@
 # file-downloader
-Last update : 19/11/2021
+Last update : 22/11/2021
 ### INFO
 Built with : [Python3](https://www.python.org/)
 
