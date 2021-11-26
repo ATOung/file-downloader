@@ -96,7 +96,6 @@ class dl:
          Size : {size}""")
         if s=="D":
             data=r.Session().get(self.u,headers={"User-Agent":ua()},stream=True)
-            print(data.headers)
             with open(f"{tmp}/{self.name}", "wb") as f:
                 print(f"{ye}> [Starting] Downloading")
                 tl=self.tmpsize
