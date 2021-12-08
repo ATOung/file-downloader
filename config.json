@@ -2,5 +2,6 @@
     "tmp_location":"tmp",
     "complete_location":"complete",
     "chunk_size":128,
+    "default_mode":"single",
     "thread_count":4
 }
