@@ -3,10 +3,7 @@ Last update : 08/12/2021
 ### INFO
 Built with : [Python3](https://www.python.org/)
 
-Usage : ```python download_[single/multi].py -p [file hosting] [url] [Optional option]```
-- -h    Show help
-- -p    mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare, hxfile
-
+Usage : ```python download.py [option] [url] [optional option]```
 - Option
     - -h  Show help
     - -p  mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare, hxfile
