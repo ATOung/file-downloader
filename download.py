@@ -3,7 +3,6 @@ File Downloader from python
 Don't steal any code from this script
 """
 
-import threading
 #pylint: disable=invalid-name,multiple-statements,missing-function-docstring,missing-class-docstring,line-too-long,eval-used
 ua=lambda: choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"])
 
@@ -65,9 +64,7 @@ def download(name, num, url, pos):
 #Multithreaded Test
 def multitest(url):
     def runtest(url):
-        _=r.Session().get(url,headers={"User-Agent":ua()},stream=True).status_code
-        if _ in [200,201,202,206]: return True
-        else: return False
+        return bool(r.Session().get(url,headers={"User-Agent":ua()},stream=True).status_code in [200,201,202,206])
     value=[]
     with concurrent.futures.ThreadPoolExecutor() as executor:
         result=[executor.submit(runtest,url) for _ in range(args.threads)]
@@ -79,7 +76,7 @@ def multitest(url):
 class dl:
     dlded=0
     pos={}
-    def __init__(self, url, direct):
+    def __init__(self, url):
         self.url=url
         self.resume=False
         self.tmpsize=0
@@ -163,7 +160,7 @@ class dl:
                         self.paused(self.provider)
 
             else:
-                data=r.Session().get(self.u,headers={"User-Agent":ua(),"Range":f"bytes={str(self.downloaded)}-"},stream=True)
+                data=r.Session().get(self.u,headers={"User-Agent":ua(),"Range":f"bytes={str(dl.dlded)}-"},stream=True)
                 print(f"{ye}> [Resume] Resuming...")
                 with open(f"{tmp}/{self.name}", "ab") as f:
                     try:
@@ -442,7 +439,7 @@ if __name__ == "__main__":
     if not os.path.isdir(complete): os.mkdir(complete)
 
     start()
-    rundl=dl(args.url, args.direct)
+    rundl=dl(args.url)
     if args.provider == "mediafire":
         rundl.mediafire()
     elif args.provider == "solidfiles":
