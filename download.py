@@ -187,7 +187,6 @@ class dl:
 
         elif args.mode == "multi":
             print(f"{ye}> [Starting] Downloading")
-            global args
             args.threads=multitest(self.u)
             self.ai()
             with concurrent.futures.ThreadPoolExecutor() as executor:
