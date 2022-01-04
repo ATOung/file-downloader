@@ -1,16 +1,20 @@
 # file-downloader
-Last update : 08/12/2021
+Last update : 04/01/2022
 ### INFO
-Built with : [Python3](https://www.python.org/)
+Built with : [Python3.8](https://www.python.org/)\
+usage: download.py [-h] -p provider [-d] [-c int] [-m mode] [-t int] url
 
-Usage : ```python download.py [option] [url] [optional option]```
-- Option
-    - -h  Show help
-    - -p  mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare, hxfile
-- Optional options:
-    - -grabdirectlink    Get direct download link only
-    - -c  [int]          Override chunk size in config
-    - -t  [single/multi] Single threaded or multithreaded
+positional arguments:\
+```url```
+
+optional arguments:
+ - -h, --help            show this help message and exit
+ - -p provider, --provider provider\
+ mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare, hxfile
+ - -d, --grabdirectlink  Return direct download link
+ - -c int, --chunk int   Override chunk size in config
+ - -m mode, --mode mode  Select singlethreaded or multithreaded download
+ - -t int, --threads int Override threads count in config
     
 ### Supported File Hosting
 - Mediafire
@@ -23,11 +27,11 @@ Usage : ```python download.py [option] [url] [optional option]```
 - Hxfile
 
 ### Features
-- Download speed meter (updated every second)
-- Internet ping test (based on singapore speedtest server)
-- Pause (CTRL-C for pause (multithreaded didn't support pause))
-- Customized Chunk Size (can adjusted in config.json (written in kilobytes)) or override with -c (value)
-- Multithreaded (still in beta)
+- Download speed meter (updated every second - Multithread / every chunk cycle - Singlethread)
+- Internet ping test (based on singapore firstmedia speedtest server)
+- Pause (CTRL-C for pause) (Only works on singlethreaded)
+- Grab direct download link with -d argument
+- Can select singlethreaded or multithreaded (default: singlethreaded)
 
 ### Note : This script may not function properly or glitch. You can use the old one at [old-script branch](https://github.com/XniceCraft/file-downloader/tree/old-script)
 
