@@ -26,7 +26,7 @@ def banner():
 | |    | | |  __/  | |__| | |____
 |_|    |_|_|\___   |_____/|______|
 Author : https://github.com/XniceCraft
-Mode : {tmode}
+Mode : {args.mode}
 """)
 
 #Return File Size
@@ -55,7 +55,7 @@ def download(name, num, url, pos):
     data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True)
     dlded=0
     with open(f"{tmp}/{name}-{num}","wb") as f:
-        for l in data.iter_content(chunk_size=chunk*1024):
+        for l in data.iter_content(chunk_size=args.chunk*1024):
             dlded += len(l)
             dl.dlded += len(l)
             f.write(l)
@@ -94,7 +94,7 @@ class dl:
             else: dl.pos[i+1]={"start":floor(self.tmpsize/args.threads)*i+1, "end":floor(self.tmpsize/args.threads)*(i+1)}
 
     def finish(self):
-        if tmode == "multi":
+        if args.mode == "multi":
             with open(f"{tmp}/{self.name}","ab") as f:
                 for i in range(args.threads):
                     with open(f"{tmp}/{self.name}-{i+1}","rb") as h:
@@ -138,14 +138,14 @@ class dl:
         size=getsize(self.tmpsize)
         print(f"""{de}> [INFO] Filename : {self.name}
          Size : {size}""")
-        if tmode == "single":
+        if args.mode == "single":
             if not self.resume:
                 data=r.Session().get(self.u,headers={"User-Agent":ua()},stream=True)
                 print(f"{ye}> [Starting] Downloading")
                 with open(f"{tmp}/{self.name}", "wb") as f:
                     try:
                         now=time.time()
-                        for l in data.iter_content(chunk_size=chunk*1024):
+                        for l in data.iter_content(chunk_size=args.chunk*1024):
                             dl.dlded += len(l)
                             f.write(l)
                             try:
@@ -168,7 +168,7 @@ class dl:
                 with open(f"{tmp}/{self.name}", "ab") as f:
                     try:
                         now=time.time()
-                        for l in data.iter_content(chunk_size=chunk*1024):
+                        for l in data.iter_content(chunk_size=args.chunk*1024):
                             dl.dlded += len(l)
                             f.write(l)
                             try:
@@ -185,7 +185,7 @@ class dl:
                         if isinstance(e, ChunkedEncodingError): print(f"{re}\n[!] Connection Error",end="")
                         self.paused(self.provider)
 
-        elif tmode == "multi":
+        elif args.mode == "multi":
             print(f"{ye}> [Starting] Downloading")
             global args
             args.threads=multitest(self.u)
@@ -435,8 +435,6 @@ if __name__ == "__main__":
     parser.add_argument("-t","--threads",metavar="int",type=int,help="Override threads count in config",choices=range(2,9),default=tmp[3])
     parser.add_argument("url")
     args=parser.parse_args()
-    chunk=args.chunk
-    tmode=args.mode
     tmp=tmp[0]
 
     if tmp[-1:] == "/": tmp=tmp[:-1]
