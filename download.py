@@ -218,7 +218,7 @@ class dl:
         else:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.tmpsize=int(data.headers['content-length'])
-            self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+            self.name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
             self.provider="mediafire"
             self.start()
 
@@ -228,7 +228,7 @@ class dl:
             tmplh=fr(html)
             d="csrfmiddlewaretoken="+tmplh.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
             self.u=r.post("http://www.solidfiles.com"+tmplh.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
-            self.u=ru.findall('url=(.+)',fr(self.u).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
+            self.u=findall('url=(.+)',fr(self.u).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
         except IndexError:
             print(f"{re}[X] File not found")
             return
@@ -279,7 +279,7 @@ class dl:
             self.start()
         else:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-            self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+            self.name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="anonfiles"
             self.start()
@@ -297,7 +297,7 @@ class dl:
             self.start()
         else:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-            self.name=ru.findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+            self.name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="bayfiles"
             self.start()
@@ -314,7 +314,7 @@ class dl:
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
-            return
+            return 
         if self.resume:
             self.start()
         else:
@@ -327,10 +327,15 @@ class dl:
     def zippyshare(self):
         html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            self.u=fr(html).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1]
-            self.u=ru.findall("= (.+);",self.u)[0]
-            tmpvar="'"+str(eval(ru.findall("\\+ (.+) \\+",self.u)[0]))+"'"
-            self.u="https://"+(self.url).split("/")[2]+eval(ru.sub("(\\(.+\\))",tmpvar,self.u))
+            self.u=fr(html).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()
+            n=findall("= (.+);",self.u[1])[0]
+            b=findall("= (.+);",self.u[2])[0]
+            z=findall("= (.+);",self.u[3])[0]
+            self.u=findall("= (.+);",self.u[4])[0]
+            _=findall(r"\((.+)\)",self.u)[0]
+            for i in [["n",n],["b",b],["z",z]]: _=_.replace(i[0],i[1])
+            _=f"\"{eval(_)}\""
+            self.u="https://"+(self.url).split("/")[2]+eval(sub("(\\(.+\\))",_,self.u))
         except IndexError:
             print(f"{re}[X] File not found")
             return
@@ -341,7 +346,7 @@ class dl:
             self.start()
         else:
             data=r.Session().head(self.u,headers={"User-Agent":ua()})
-            self.name=r.utils.unquote(ru.findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
+            self.name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
             self.tmpsize=int(data.headers['content-length'])
             self.provider="zippyshare"
             self.start()
@@ -383,7 +388,8 @@ if __name__ == "__main__":
     from random import choice
     from platform import system as ps
     from shutil import move
-    import sys,re as ru,time,os,json,argparse,concurrent.futures # pylint: disable=multiple-imports
+    from re import findall, sub
+    import sys,time,os,json,argparse,concurrent.futures # pylint: disable=multiple-imports
     try:
         from lxml.html import fromstring as fr
         import requests as r
