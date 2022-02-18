@@ -3,18 +3,25 @@ File Downloader from python
 Don't steal any code from this script
 """
 
-#pylint: disable=invalid-name,multiple-statements,missing-function-docstring,missing-class-docstring,line-too-long,eval-used
+#pylint: disable=invalid-name,multiple-statements,missing-function-docstring,missing-class-docstring,line-too-long,eval-used,multiple-imports
 ua=lambda: choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"])
 
 #Connection Test
 def test():
     print(f"{cy}[T] Testing your connection")
-    s=time.time()
-    r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080")
-    ping=int((round(time.time() - s, 3))*1000)
-    if ping < 500: print(f"{gr}[G] Your connection is good | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
-    elif 500 <= ping < 1000: print(f"{ye}[N] Your connection is normal | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
-    else: print(f"{re}[B] Your connection is bad | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    try:
+        s=time.time()
+        r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080", timeout=3)
+        ping=int((round(time.time() - s, 3))*1000)
+        if ping < 500: print(f"{gr}[G] Your connection is good | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+        elif 500 <= ping < 1000: print(f"{ye}[N] Your connection is normal | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+        else: print(f"{re}[B] Your connection is bad | Ping : {ping}ms , pinged from Singapore Firstmedia speedtest server")
+    except ConnectTimeout:
+        print(f"{re}[Err] Connection Timeout. Ping exceeds 3000ms{de}")
+        sys.exit()
+    except r.exceptions.ConnectionError as e:
+        print(f"{re}[Err] Connection Error!{de}")
+        sys.exit()
 
 #Banner
 def banner():
@@ -42,26 +49,35 @@ def getsize(a):
 
 #Start
 def start():
-    os.system(clear)
-    banner()
-    test()
-    time.sleep(2)
-    os.system(clear)
-    banner()
+    if "https://" in args.url or "http://" in args.url:
+        os.system(clear)
+        banner()
+        test()
+        time.sleep(2)
+        os.system(clear)
+        banner()
+    else:
+        print(f"{re}[Err] Invalid URL scheme. There is no http/https in URL{de}")
+        sys.exit()
 
-#Download File
-def download(name, num, url, pos):
-    data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True)
-    dlded=0
-    with open(f"{tmp}/{name}-{num}","wb") as f:
-        for l in data.iter_content(chunk_size=args.chunk*1024):
-            dlded += len(l)
-            dl.dlded += len(l)
-            f.write(l)
-        f.close()
-    dl.pos[num]["start"]=dlded
+#Download Function
+def download(name, num, url, pos, resume=False):
+    data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5)
+    if resume: m="ab"
+    else: m="wb"    
+    with open(f"{tmp}/{name}-{num}",m) as f:
+        try:
+            for l in data.iter_content(chunk_size=args.chunk*1024):
+                f.write(l)
+                dl.dlded += len(l)
+            f.close()
+            return True
+        except (r.exceptions.ConnectionError, ChunkedEncodingError):
+            f.close()
+            dl.pos[num]["start"]=dl.pos[num]["start"]+os.path.getsize(f"{tmp}/{name}-{num}")
+            return False
 
-#Multithreaded Test
+#Possible Threads to Download
 def multitest(url):
     def runtest(url):
         return bool(r.Session().get(url,headers={"User-Agent":ua()},stream=True).status_code in [200,201,202,206])
@@ -100,7 +116,7 @@ class dl:
                     os.remove(f"{tmp}/{self.name}-{i+1}")
             f.close()
         move(rf'{tmp}/{self.name}',rf"{complete}/{self.name}")
-        print(f"{gr}\n> [Finished] Success download {self.name}")
+        print(f"{gr}\n> [Finished] Success download {self.name}{de}")
 
     #Pause function for singlethreaded
     def paused(self, provider):
@@ -129,7 +145,7 @@ class dl:
                 self.hxfile()
         else:
             os.remove(f"{tmp}/{self.name}")
-            print(f"{re}> {ma}File {cy}{self.name} {ma}removed")
+            print(f"{re}> {gr}File {cy}{self.name} {gr}was successfully removed")
 
     def start(self):
         size=getsize(self.tmpsize)
@@ -200,178 +216,168 @@ class dl:
                         sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
                         sys.stdout.flush()
                     except KeyboardInterrupt: pass
-                print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
-                self.finish()
+            while True:
+                res=[i.result() for i in concurrent.futures.as_completed(run)]
+                if all(res):
+                    print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
+                    self.finish()
+                    break
+                else:
+                    print(f"{gr}\r\n> {res.count(False)} thread(s) (is/are) failed.Try again or Exit (t/e)?")
+                    ask=input("> ")
+                    if ask.lower() == "t" or ask.lower() == "y":
+                        self.resume=True
+                        os.system(clear)
+                        banner()
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            failedthread=[i+1 for i in range(len(res)) if res[i] == False]
+                            run=[executor.submit(download,self.name,_,self.u,dl.pos[_],True) for _ in failedthread]
+                            now=time.time()
+                            while False in [i.done() for i in run]:
+                                try:
+                                    time.sleep(1)
+                                    try:
+                                        speed=str(int(dl.dlded / (time.time() - (now+1)) / 1000))
+                                    except ZeroDivisionError:
+                                        speed="0"
+                                    done=round(100 * dl.dlded / self.tmpsize,2)
+                                    sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
+                                    sys.stdout.flush()
+                                except KeyboardInterrupt: pass
+                    else:
+                        for i in range(args.threads):
+                            os.remove(f"{tmp}/{self.name}-{i+1}")
+                        print(f"{re}> {gr}File {cy}{self.name} {gr}was successfully removed")
+                        break
 
-    #Lxml Parser
+    #Get Direct Link
     def mediafire(self):
         try:
-            self.u=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
-        except IndexError:
+            self.u=utils.mediafire.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.tmpsize=int(data.headers['content-length'])
             self.name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
             self.provider="mediafire"
-            self.start()
+        self.start()
 
     def solidfiles(self):
-        html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            tmplh=fr(html)
-            d="csrfmiddlewaretoken="+tmplh.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
-            self.u=r.post("http://www.solidfiles.com"+tmplh.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
-            self.u=findall('url=(.+)',fr(self.u).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
-        except IndexError:
+            self.u=utils.solidfiles.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.tmpsize=int(data.headers['content-length'])
             self.name=r.utils.unquote((self.u).split('/')[-1])
             self.provider="solidfiles"
-            self.start()
+        self.start()
 
     def tusfiles(self):
-        html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            tmplh=fr(html).xpath("//form[@method=\"POST\"]/input/@value")
-            d=f"op={tmplh[0]}&id={tmplh[1]}&rand={tmplh[2]}&referer=&method_free=&method_premium=1"
-            self.u=r.post(self.url,headers={"User-Agent":ua()},data=d,allow_redirects=False).headers["location"]
-        except IndexError:
+            self.u=utils.tusfiles.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text,self.url)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"Keep-Alive"})
             self.name=(self.u).split("/")[-1]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="tusfiles"
-            self.start()
+        self.start()
 
     def anonfiles(self):
-        html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            self.u=fr(html).xpath('//a[@id=\"download-url\"]/@href')[0]
-        except IndexError:
+            self.u=utils.anonbayfiles.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="anonfiles"
-            self.start()
+        self.start()
 
     def bayfiles(self):
         try:
-            self.u=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath('//a[@id="download-url"]/@href')[0]
-        except IndexError:
+            self.u=utils.anonbayfiles.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="bayfiles"
-            self.start()
+        self.start()
 
     def racaty(self):
-        html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            tmplh=fr(html).xpath("//form[@id=\"getExtoken\"]/input/@value")
-            d=f"op={tmplh[0]}&id={tmplh[1]}&rand={tmplh[2]}&referer=&method_free&method_premium=1"
-            self.u=r.post(self.url,headers={"User-Agent":ua()},data=d).text
-            self.u=fr(self.u).xpath("//a[@id='uniqueExpirylink']/@href")[0]
-        except IndexError:
+            self.u=utils.racaty.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text,self.url)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
-            return 
-        if self.resume:
-            self.start()
-        else:
+            return
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.name=(self.u).split("/")[-1]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="racaty"
-            self.start()
+        self.start()
 
     def zippyshare(self):
-        html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            self.u=fr(html).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()
-            n=findall("= (.+);",self.u[1])[0]
-            b=findall("= (.+);",self.u[2])[0]
-            z=findall("= (.+);",self.u[3])[0]
-            self.u=findall("= (.+);",self.u[4])[0]
-            _=findall(r"\((.+)\)",self.u)[0]
-            for i in [["n",n],["b",b],["z",z]]: _=_.replace(i[0],i[1])
-            _=f"\"{eval(_)}\""
-            self.u="https://"+(self.url).split("/")[2]+eval(sub("(\\(.+\\))",_,self.u))
-        except IndexError:
+            self.u=utils.zippyshare.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text,self.url)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.Session().head(self.u,headers={"User-Agent":ua()})
             self.name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
             self.tmpsize=int(data.headers['content-length'])
             self.provider="zippyshare"
-            self.start()
+        self.start()
 
     def hxfile(self):
-        html=r.get(self.url,headers={"User-Agent":ua()}).text
         try:
-            tmplh=fr(html).xpath("//form[@name=\"F1\"]/input/@value")
-            d=f"op={tmplh[0]}&id={tmplh[1]}&rand={tmplh[2]}&referer=&method_free&method_premium=1"
-            self.u=r.post(self.url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
-            self.u=fr(self.u).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
-        except IndexError:
+            self.u=utils.hxfile.get_direct_link(r.get(self.url,headers={"User-Agent":ua()}).text,self.url)
+        except DirectLinkError:
             print(f"{re}[X] File not found")
             return
         if args.direct:
             print(f"Link : {cy}{self.u}")
             return
-        if self.resume:
-            self.start()
-        else:
+        if not self.resume:
             data=r.head(self.u,headers={"User-Agent":ua(),"Connection":"keep-alive"})
             self.name=(self.u).split("/")[-1]
             self.tmpsize=int(data.headers['content-length'])
             self.provider="hxfile"
-            self.start()
+        self.start()
 
 def get_setting():
     temp=[]
@@ -388,12 +394,13 @@ if __name__ == "__main__":
     from random import choice
     from platform import system as ps
     from shutil import move
-    from re import findall, sub
-    import sys,time,os,json,argparse,concurrent.futures # pylint: disable=multiple-imports
+    from re import findall
+    from utils.exceptions import DirectLinkError
+    import sys,time,os,json,argparse,concurrent.futures
     try:
-        from lxml.html import fromstring as fr
+        import utils.mediafire,utils.solidfiles,utils.tusfiles,utils.anonbayfiles,utils.racaty,utils.zippyshare,utils.hxfile
         import requests as r
-        from requests.exceptions import ChunkedEncodingError
+        from requests.exceptions import ChunkedEncodingError, ConnectTimeout
     except ModuleNotFoundError:
         print("Install required package with \'pip install -r requirements.txt\'")
         sys.exit()
