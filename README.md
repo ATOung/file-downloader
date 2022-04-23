@@ -1,16 +1,14 @@
 # file-downloader
-Last update : 04/01/2022
+Last update : 23/04/2022
 ### INFO
 Built with : [Python3.8](https://www.python.org/)\
-usage: download.py [-h] -p provider [-d] [-c int] [-m mode] [-t int] url
+usage: prog.py [-h] [-d] [-c int] [-m mode] [-t int] url
 
 positional arguments:\
 ```url```
 
 optional arguments:
  - -h, --help            show this help message and exit
- - -p provider, --provider provider\
- mediafire, solidfiles, tusfiles, anonfiles, bayfiles, racaty, zippyshare, hxfile
  - -d, --grabdirectlink  Return direct download link
  - -c int, --chunk int   Override chunk size in config
  - -m mode, --mode mode  Select singlethreaded or multithreaded download
