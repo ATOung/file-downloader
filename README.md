@@ -1,7 +1,7 @@
 # file-downloader
 Last update : 23/04/2022
 ### INFO
-Built with : <img src="https://img.shields.io/badge/Python-3.8-brightgreen?style=for-the-badge&logo=python">
+Built with : <img src="https://img.shields.io/badge/Python-3.8-brightgreen?style=for-the-badge&logo=python"><br>
 usage: ```prog.py [-h] {download,resume,paused}```
 
 - download: Download a file
