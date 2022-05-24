@@ -542,9 +542,8 @@ if __name__ == "__main__":
                             rundl.tmpsize=dyaml["Size"]
                             rundl.name=dyaml["Name"]
                             rundl.res=dyaml["Return-Pos"]
-                        except (KeyError, yaml.scanner.ScannerError) as e:
-                            print(e)
-#                            print(f"{re} An error occured. Try get a new list of paused download!{de}")
+                        except (KeyError, yaml.scanner.ScannerError):
+                            print(f"{re} An error occured. Try get a new list of paused download!{de}")
                             sys.exit()
                         idfile.close()
                 except FileNotFoundError:
