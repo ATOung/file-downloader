@@ -1,5 +1,5 @@
 # file-downloader
-Last update : 23/04/2022
+Last update : 24/05/2022
 ### INFO
 Built with : <img src="https://img.shields.io/badge/Python-3.8-brightgreen?style=for-the-badge&logo=python"><br>
 usage: ```prog.py [-h] {download,resume,paused}```
@@ -23,6 +23,8 @@ optional arguments:
  - -m mode, --mode mode  Select singlethreaded or multithreaded download
  - -t int, --threads int Override threads count in config
  
+Example: ```python prog.py download https://mediafire.com/xxxxx```
+
 #### Resume
 usage: prog.py resume [-h] [-c int] id
 
@@ -32,6 +34,8 @@ positional arguments:<br>
 optional arguments:
   - -h, --help           show this help message and exit
   - -c int, --chunk int  Override chunk size in config
+
+Example: ```python prog.py resume 1```
 
 #### Paused
 usage: prog.py paused
