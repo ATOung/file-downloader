@@ -53,8 +53,8 @@ usage: prog.py paused
 ### Features
 - Download speed meter (updated every second - Multithread / every chunk cycle - Singlethread)
 - Internet ping test (based on singapore firstmedia speedtest server)
-- Pause (CTRL-C for pause) (Only works on singlethreaded)
+- Pause (CTRL-C for pause)
 - Grab direct download link with -d argument
-- Can select singlethreaded or multithreaded (default: singlethreaded)
+- Can select singlethreaded or multithreaded (default: multithreaded)
 
 > Please report if there is a bug on this script
