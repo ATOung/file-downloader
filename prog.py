@@ -5,7 +5,9 @@ Don't steal any code from this script
 """
 
 #pylint: disable=invalid-name,multiple-statements,line-too-long,eval-used,multiple-imports,import-outside-toplevel
-ua=lambda: choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+def ua():
+    '''Return User-Agent'''
+    return choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
 "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"])
 
@@ -14,15 +16,19 @@ class ThreadPaused(Exception):
 
 def test():
     '''Test your internet ping with singapore firstmedia server.'''
-    print(f"{cy}[%] Testing your connection")
+    print(f"{gra}[%] {dbl}Testing your connection")
     try:
         print(f"{de}{dgr}[%] Pinging to {wh}Singapore {dbl}Firstmedia speedtest server")
         s=time.time()
         r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080", timeout=3)
-        ping=int((round(time.time() - s, 3))*1000)
-        if ping < 500: print(f"{gr}[G] Your connection is good | Ping : {ping}ms")
-        elif 500 <= ping < 1000: print(f"{ye}[N] Your connection is average | Ping : {ping}ms")
-        else: print(f"{re}[B] Your connection is bad | Ping : {ping}ms")
+        s2=time.time()
+        ping=int((round(s2 - s, 3))*1000)
+        if ping < 500:
+            print(f"{gr}[G] Your connection is good | Ping : {ping}ms")
+        elif 500 <= ping < 1000:
+            print(f"{ye}[N] Your connection is average | Ping : {ping}ms")
+        else:
+            print(f"{re}[B] Your connection is bad | Ping : {ping}ms")
     except (r.exceptions.ConnectTimeout,r.exceptions.ReadTimeout):
         print(f"{re}[Err] Connection Timeout. Ping exceeds 3000ms{de}")
         sys.exit()
@@ -72,7 +78,9 @@ def download(name, num, url, pos, resume=False):
     try: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5)
     except (r.exceptions.ConnectionError,r.exceptions.ReadTimeout): return {"Pos":num,"Val":False}
     m="wb"
-    if resume: m="ab"
+    if resume:
+        m="ab"
+        rundl.pos[num]["start"]-=os.path.getsize(f"{tmp}/{name}-{num}")
     if args.mode == "multi":
         with open(f"{tmp}/{name}-{num}",m) as f:
             try:
@@ -81,11 +89,11 @@ def download(name, num, url, pos, resume=False):
                     rundl.dlded += len(l)
                     if kill_event.is_set(): raise KeyboardInterrupt
                 f.close()
-                rundl.pos[num]["start"]=rundl.pos[num]["start"]+os.path.getsize(f"{tmp}/{name}-{num}")
+                rundl.pos[num]["start"]+=os.path.getsize(f"{tmp}/{name}-{num}")
                 return {"Pos":num,"Val":True}
             except (r.exceptions.ConnectionError, ChunkedEncodingError,r.exceptions.ReadTimeout, KeyboardInterrupt):
                 f.close()
-                rundl.pos[num]["start"]=rundl.pos[num]["start"]+os.path.getsize(f"{tmp}/{name}-{num}")
+                rundl.pos[num]["start"]+=os.path.getsize(f"{tmp}/{name}-{num}")
                 return {"Pos":num,"Val":False}
     with open(f"{tmp}/{name}",m) as f:
         try:
@@ -169,11 +177,7 @@ def multidl_handler(name, u, tmpsize, resume=False, thres=None):
 #Return Lxml Data
 def mediafire(url):
     '''Return mediafire'''
-    try:
-        newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
     rawsize=int(data.headers['content-length'])
     name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
@@ -181,14 +185,10 @@ def mediafire(url):
 
 def solidfiles(url):
     '''Return solidfiles'''
-    try:
-        temp=fr(r.get(url,headers={"User-Agent":ua()}).text)
-        d="csrfmiddlewaretoken="+temp.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
-        url=r.post("http://www.solidfiles.com"+tmp.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
-        newurl=findall('url=(.+)',fr(url).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    temp=fr(r.get(url,headers={"User-Agent":ua()}).text)
+    d="csrfmiddlewaretoken="+temp.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
+    url=r.post("http://www.solidfiles.com"+temp.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
+    newurl=findall('url=(.+)',fr(url).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
     rawsize=int(data.headers['content-length'])
     name=r.utils.unquote(newurl.split('/')[-1])
@@ -196,13 +196,9 @@ def solidfiles(url):
 
 def tusfiles(url):
     '''Return tusfiles'''
-    try:
-        temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@method=\"POST\"]/input/@value")
-        d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
-        newurl=r.post(url,headers={"User-Agent":ua()},data=d,allow_redirects=False).headers["location"]
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@method=\"POST\"]/input/@value")
+    d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
+    newurl=r.post(url,headers={"User-Agent":ua()},data=d,allow_redirects=False).headers["location"]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"Keep-Alive"})
     name=newurl.split("/")[-1]
     rawsize=int(data.headers['content-length'])
@@ -210,11 +206,7 @@ def tusfiles(url):
 
 def anonbayfiles(url):
     '''Return anonbay and bayfiles'''
-    try:
-        newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id=\"download-url\"]/@href')[0]
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id=\"download-url\"]/@href')[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
     name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
     rawsize=int(data.headers['content-length'])
@@ -222,14 +214,10 @@ def anonbayfiles(url):
 
 def racaty(url):
     '''Return racaty'''
-    try:
-        temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@id=\"getExtoken\"]/input/@value")
-        d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
-        _=r.post(url,headers={"User-Agent":ua()},data=d).text
-        newurl=fr(_).xpath("//a[@id='uniqueExpirylink']/@href")[0]
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@id=\"getExtoken\"]/input/@value")
+    d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
+    _=r.post(url,headers={"User-Agent":ua()},data=d).text
+    newurl=fr(_).xpath("//a[@id='uniqueExpirylink']/@href")[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
     name=newurl.split("/")[-1]
     rawsize=int(data.headers['content-length'])
@@ -237,15 +225,11 @@ def racaty(url):
 
 def zippyshare(url):
     '''Return zippyshare'''
-    try:
-        var=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1][:-1]
-        var=var.replace("document.getElementById('dlbutton').href =","")
-        _=findall(r"\((.+)\)",var)[0]
-        var=var.replace(f"({_})",f"\"{eval(_)}\"")
-        newurl="https://"+(url).split("/")[2]+eval(var)
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    var=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1][:-1]
+    var=var.replace("document.getElementById('dlbutton').href =","")
+    _=findall(r"\((.+)\)",var)[0]
+    var=var.replace(f"({_})",f"\"{eval(_)}\"")
+    newurl="https://"+(url).split("/")[2]+eval(var)
     data=r.Session().head(newurl,headers={"User-Agent":ua()})
     name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
     rawsize=int(data.headers['content-length'])
@@ -253,14 +237,10 @@ def zippyshare(url):
 
 def hxfile(url):
     '''Return hxfile'''
-    try:
-        temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@name=\"F1\"]/input/@value")
-        d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free&method_premium=1"
-        var=r.post(url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
-        newurl=fr(var).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
-    except IndexError:
-        print(f"{re}[X] File not found")
-        sys.exit()
+    temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@name=\"F1\"]/input/@value")
+    d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free&method_premium=1"
+    var=r.post(url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
+    newurl=fr(var).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
     name=newurl.split("/")[-1]
     rawsize=int(data.headers['content-length'])
@@ -270,143 +250,131 @@ def hxfile(url):
 class dl:
     '''Main class to handle the download'''
     def __init__(self, resume=False):
-        self.resume=resume
-        self.tmpsize=0
-        self.name=None
-        self.host=None
         self.dlded=0
-        self.u=None
         self.pos={}
         self.res=None
+        self.var={'host':None, 'url': None, 'name': None, 'rawsize': None, 'resume': resume}
 
     def ai(self):
         '''Calculate where the thread start and stop'''
         for i in range(args.threads):
-            if i == 0: rundl.pos[1]={"start":0, "end":floor(self.tmpsize/args.threads)}
-            elif i+1 == args.threads: rundl.pos[i+1]={"start":floor(self.tmpsize/args.threads)*i+1, "end":self.tmpsize}
-            else: rundl.pos[i+1]={"start":floor(self.tmpsize/args.threads)*i+1, "end":floor(self.tmpsize/args.threads)*(i+1)}
+            if i == 0: rundl.pos[1]={"start":0, "end":floor(self.var["rawsize"]/args.threads)}
+            elif i+1 == args.threads: rundl.pos[i+1]={"start":floor(self.var["rawsize"]/args.threads)*i+1, "end":self.var["rawsize"]}
+            else: rundl.pos[i+1]={"start":floor(self.var["rawsize"]/args.threads)*i+1, "end":floor(self.var["rawsize"]/args.threads)*(i+1)}
 
     def finish(self):
         '''Handle when the download finished'''
         if args.command == "resume":
-            os.remove(f"{tmp}/{self.name}.log")
+            os.remove(f"{tmp}/{self.var['name']}.log")
         if args.mode == "multi":
-            with open(f"{tmp}/{self.name}","ab") as f:
+            with open(f"{tmp}/{self.var['name']}","ab") as f:
                 for i in range(args.threads):
-                    with open(f"{tmp}/{self.name}-{i+1}","rb") as h:
+                    with open(f"{tmp}/{self.var['name']}-{i+1}","rb") as h:
                         f.write(h.read())
                     h.close()
-                    os.remove(f"{tmp}/{self.name}-{i+1}")
+                    os.remove(f"{tmp}/{self.var['name']}-{i+1}")
             f.close()
-        move(rf'{tmp}/{self.name}',rf"{complete}/{self.name}")
-        print(f"{gr}\n> [Finished] Success download {self.name}{de}")
+        move(rf"{tmp}/{self.var['name']}",rf"{complete}/{self.var['name']}")
+        print(f"{gr}\n> [Finished] Success download {self.var['name']}{de}")
 
-    def paused(self):
-        '''Handle pause for singlethreaded'''
-        self.resume=True
-        print(f"{gr}\r\n> Download paused. Resume, exit or remove(res/e/rem)?")
-        ask=input("> ")
-        if ask.lower() == "e" or ask.lower() == "exit":
-            with open(f"{tmp}/{self.name}.log","w",encoding="utf-8") as f:
-                f.write(f"Source: \'{args.url}\'\nSize: {self.tmpsize}\nName: \'{self.name}\'\nDownloaded: {rundl.dlded}\nThreads: 1\nMode: single\nThread-Pos: {rundl.pos}\nReturn-Pos: False")
-            f.close()
-            print(f"{gr}[>] Exit{de}")
-            sys.exit()
-        elif ask.lower() == "rem" or ask.lower() == "remove":
-            os.remove(f"{tmp}/{self.name}")
-            print(f"{gr}Sucessfully remove {self.name}{de}")
-            sys.exit()
-        os.system(clear)
-        banner()
-        if self.host == "mediafire":
-            self.run("mediafire")
-        elif self.host == "solidfiles":
-            self.run("solidfiles")
-        elif self.host == "tusfiles":
-            self.run("tusfiles")
-        elif self.host == "anonbayfiles":
-            self.run("anonbayfiles")
-        elif self.host == "racaty":
-            self.run("racaty")
-        elif self.host == "zippyshare":
-            self.run("zippyshare")
-        elif self.host == "hxfile":
-            self.run("hxfile")
-
-    def run(self, host):
-        '''Handle the entire process'''
-        self.host=host
-        hostlist={
-            "mediafire":mediafire,
-            "solidfiles":solidfiles,
-            "tusfiles":tusfiles,
-            "anonbayfiles":anonbayfiles,
-            "racaty":racaty,
-            "zippyshare":zippyshare,
-            "hxfile":hxfile
-        }
-        for key, value in hostlist.items():
-            if host == key:
-                lxmlval=value(args.url)
-        if self.resume:
-            self.u=lxmlval[0]
-        else:
-            self.u, self.tmpsize, self.name=lxmlval
-        if args.direct:
-            print(f"{ye}[%] Link : {cy}{self.u}")
-            return
-        print(f"""{de}> [INFO] Filename : {self.name}
-         Size : {getsize(self.tmpsize)}""")
+    def paused(self, mtdata=None):
+        '''Paused Handler'''
+        self.var['resume']=True
         if args.mode == "single":
-            if not self.resume:
+            print(f"{gr}\r\n> Download paused. Resume, exit or remove(res/e/rem)?")
+            ask=input("> ")
+            if ask.lower() == "e" or ask.lower() == "exit":
+                with open(f"{tmp}/{self.var['name']}.log","w",encoding="utf-8") as f:
+                    f.write(f"Source: \'{args.url}\'\nSize: {self.var['rawsize']}\nName: \'{self.var['name']}\'\nDownloaded: {rundl.dlded}\nThreads: 1\nMode: single\nThread-Pos: {rundl.pos}\nReturn-Pos: False")
+                f.close()
+                print(f"{gr}[>] Exit{de}")
+                sys.exit()
+            elif ask.lower() == "rem" or ask.lower() == "remove":
+                os.remove(f"{tmp}/{self.var['name']}")
+                print(f"{gr}Sucessfully remove {self.var['name']}{de}")
+                sys.exit()
+            os.system(clear)
+            banner()
+            self.run(self.var['host'])
+        elif args.mode=="multi":
+            kill_event.clear()
+            print(f"\r{gr}> {mtdata.count(False)} thread(s) failed. Try again, exit or remove(t/e/r)?")
+            ask=input("> ")
+            if ask.lower() == "e" or ask.lower() == "exit":
+                with open(f"{tmp}/{self.var['name']}.log","w",encoding="utf-8") as f:
+                    f.write(f"Source: \'{args.url}\'\nSize: {self.var['rawsize']}\nName: \'{self.var['name']}\'\nDownloaded: {rundl.dlded}\nThreads: {args.threads}\nMode: multi\nThread-Pos: {rundl.pos}\nReturn-Pos: {mtdata}")
+                f.close()
+                print(f"{gr}[>] Exit{de}")
+                sys.exit()
+            elif ask.lower() == "r" or ask.lower() == "resume":
+                for i in range(args.threads):
+                    os.remove(f"{tmp}/{self.var['name']}-{i+1}")
+                print(f"{re}> {gr}File {cy}{self.var['name']} {gr}was successfully removed{de}")
+                return
+            os.system(clear)
+            banner()
+            rundl.dlded=0
+            for i in range(args.threads): rundl.dlded+=os.path.getsize(f"{tmp}/{self.var['name']}-{i+1}")
+            self.run(self.var["host"],reslist=mtdata)
+
+    def run(self, host, reslist=None):
+        '''Handle the entire process'''
+        self.var["host"]=host
+        for key, value in {"mediafire":mediafire,"solidfiles":solidfiles,"tusfiles":tusfiles,"anonbayfiles":anonbayfiles,"racaty":racaty,"zippyshare":zippyshare,"hxfile":hxfile}.items():
+            if host == key:
+                try:
+                    lxmlval=value(args.url)
+                    break
+                except IndexError:
+                    print(f"{re}[X] File not found")
+                    sys.exit(1)
+        if self.var['resume']:
+            self.var["url"]=lxmlval[0]
+        else:
+            self.var["url"], self.var["rawsize"], self.var["name"]=lxmlval
+        if args.direct:
+            print(f"{de}{gra}>>> {dgr}[=] Link : {cy}{self.var['url']}{de}")
+            return
+        print(f"""{de}> [INFO] Filename : {self.var['name']}
+         Size : {getsize(self.var['rawsize'])}""")
+        if args.mode == "single":
+            if not self.var['resume']:
                 print(f"{ye}> [Info] Downloading")
                 try:
-                    rundl.pos={"start":0,"end":self.tmpsize}
-                    download(self.name,self.tmpsize,self.u,rundl.pos)
+                    rundl.pos={"start":0,"end":self.var['rawsize']}
+                    download(self.var['name'],self.var['rawsize'],self.var['url'],rundl.pos)
                     self.finish()
                     sys.exit()
                 except ThreadPaused:
                     self.paused()
             print(f"{ye}> [Info] Resuming")
             try:
-                download(self.name,self.tmpsize,self.u,rundl.pos,resume=True)
+                download(self.var['name'],self.var['rawsize'],self.var['url'],rundl.pos,resume=True)
                 self.finish()
                 sys.exit()
             except ThreadPaused:
                 self.paused()
         elif args.mode == "multi":
-            if not self.resume:
-                args.threads=multitest(self.u)
+            if not self.var['resume']:
+                args.threads=multitest(self.var['url'])
                 self.ai()
-                try: run=multidl_handler(self.name,self.u,self.tmpsize)
+                try: run=multidl_handler(self.var['name'],self.var['url'],self.var['rawsize'])
                 except KeyboardInterrupt: pass
-            while True:
-                try:
-                    reslist=sorted([i.result() for i in concurrent.futures.as_completed(run)], key=lambda p: p["Pos"])
-                    self.res=[reslist[i]["Val"] for i in range(len(reslist))]
-                    if all(self.res):
-                        print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
-                        self.finish()
-                        return
-                    print(f"{gr}\r\n> {self.res.count(False)} thread(s) failed. Try again, exit or remove(t/e/r)?")
-                    ask=input("> ")
-                    if ask.lower() == "e":
-                        with open(f"{tmp}/{self.name}.log","w",encoding="utf-8") as f:
-                            f.write(f"Source: \'{args.url}\'\nSize: {self.tmpsize}\nName: \'{self.name}\'\nDownloaded: {rundl.dlded}\nThreads: {args.threads}\nMode: multi\nThread-Pos: {rundl.pos}\nReturn-Pos: {self.res}")
-                        f.close()
-                        print(f"{gr}[>] Exit{de}")
-                        sys.exit()
-                    elif ask.lower() == "r":
-                        for i in range(args.threads):
-                            os.remove(f"{tmp}/{self.name}-{i+1}")
-                        print(f"{re}> {gr}File {cy}{self.name} {gr}was successfully removed")
-                        return
-                except UnboundLocalError: pass
-                self.resume=True
-                os.system(clear)
-                banner()
-                try: run=multidl_handler(self.name,self.u,self.tmpsize,resume=True,thres=self.res)
+            else:
+                try: run=multidl_handler(self.var['name'],self.var['url'],self.var['rawsize'],resume=True,thres=reslist)
                 except KeyboardInterrupt: pass
+            tmpres=sorted([i.result() for i in concurrent.futures.as_completed(run)], key=lambda p: p["Pos"])
+            if self.var["resume"]:
+                for i in tmpres:
+                    self.res[i["Pos"]-1]["Val"]=i["Val"]
+            else:
+                self.res=tmpres
+            reslist=[self.res[i]["Val"] for i,_ in enumerate(self.res)]
+            if all(reslist):
+                print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
+                self.finish()
+                sys.exit()
+            self.paused(mtdata=reslist)
 
 def get_setting():
     '''Get and return program settings'''
@@ -420,7 +388,7 @@ def get_setting():
             temp.append(jsonvar["thread_count"])
             temp.append(jsonvar["default_mode"])
     except (json.decoder.JSONDecodeError, KeyError, FileNotFoundError):
-        print(f"{re}[Err] Config file didn't found or corrupted\n[!] Creating new one!{de}")
+        print(f"{dre}>>> {de}{dbl}[Err] {re}Config file didn't found or corrupted\n{de}{dre}>>> {de}{dgr}[+] {gr}Creating new config.json!{de}")
         with open("config.json","w",encoding="utf-8") as f:
             f.write("""{
     \"tmp_location\":\"tmp\",
@@ -437,11 +405,11 @@ def get_paused(quiet=False):
     '''Get list of paused download'''
     from glob import glob
     pausedfile=glob(f"{tmp}/*.log")
-    if not quiet: print(f"{dbl}[Info] {cy}List of paused download\n\n{de}{dgr}[Id]{dre}=={dcy}[Name]{de}")
+    if not quiet: print(f"{gra}>>> {dbl}[Info] {dgr}List Of Paused Download\n{wh}----------------------------------\n{de}{dre}[Id]{de}   {dcy}[Name]{de}")
     with open("paused.info","w",encoding="utf-8") as f:
         f.write("{")
         for i,n in enumerate(pausedfile):
-            if not quiet: print(f"{re}[{i+1}] {gr}{os.path.basename(n).split('.log')[0]}{de}")
+            if not quiet: print(f"{dgr}[{i+1}] {gr}{os.path.basename(n).split('.log')[0]}{de}")
             if i == 0: f.write("\""+str(i+1)+"\""+":\""+os.path.basename(n).split('.log')[0]+"\"")
             elif i != 0 and i+1 != len(pausedfile): f.write(","+"\""+str(i+1)+"\""+":\""+os.path.basename(pausedfile[i]).split('.log')[0]+"\"")
         f.write("}")
@@ -471,33 +439,35 @@ if __name__ == "__main__":
         try:
             from colorama import init, Fore, Style
             init()
-            dre=Fore.RED
+            dre=Fore.RED+Style.DIM
             dgr=Fore.GREEN
             dbl=Fore.BLUE
             dcy=Fore.CYAN
-            wh=Fore.WHITE
+            gra=Fore.WHITE
+            wh=Fore.WHITE + Style.BRIGHT
             re=Fore.RED + Style.BRIGHT
             gr=Fore.GREEN + Style.BRIGHT
             ye=Fore.YELLOW + Style.BRIGHT
             cy=Fore.CYAN + Style.BRIGHT
             ma=Fore.MAGENTA + Style.BRIGHT
-            de=Fore.RESET + Style.BRIGHT
+            de=Style.RESET_ALL
             del(init,Fore,Style)
             clear="cls"
         except ModuleNotFoundError:
             print("Install colorama with \'pip install colorama\'")
             sys.exit()
     else:
-        dre="\033[31m"
+        dre="\033[2;31m"
         dgr="\033[32m"
         dbl="\033[34m"
         dcy="\033[36m"
-        wh="\033[37m"
+        gra="\033[37m"
         re="\033[1;31m"
         gr="\033[1;32m"
         ye="\033[1;33m"
         ma="\033[1;35m"
         cy="\033[1;36m"
+        wh="\033[1;37m"
         de="\033[1;0m"
         clear="clear"
 
@@ -539,8 +509,8 @@ if __name__ == "__main__":
                             args.direct=False
                             rundl.dlded=dyaml["Downloaded"]
                             rundl.pos=dyaml["Thread-Pos"]
-                            rundl.tmpsize=dyaml["Size"]
-                            rundl.name=dyaml["Name"]
+                            rundl.var["rawsize"]=dyaml["Size"]
+                            rundl.var["name"]=dyaml["Name"]
                             rundl.res=dyaml["Return-Pos"]
                         except (KeyError, yaml.scanner.ScannerError):
                             print(f"{re} An error occured. Try get a new list of paused download!{de}")
@@ -550,7 +520,7 @@ if __name__ == "__main__":
                     print(f"{re}[Err] File with download {args.id} doesn't exist{de}")
                     sys.exit()
                 pfile.close()
-                del(idfile,pfile)
+                del(idfile,pfile,dyaml)
         else:
             rundl=dl()
         if not args.mode in ["multi","single"]:
