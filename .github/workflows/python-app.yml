@@ -38,5 +38,5 @@ jobs:
     - name: Zippyshare
       run: python prog.py download https://www42.zippyshare.com/v/wRdO7y1A/file.html
     - name: Hxfile
-      run: python prog.py download https://hxfile.co/bda8bcfgyefw
+      run: python prog.py download https://hxfile.co/dpnia0tpgmao
         
