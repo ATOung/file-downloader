@@ -75,7 +75,7 @@ def start():
 
 def download(name, num, url, pos, resume=False):
     '''Download function for multi and singlethread'''
-    try: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5)
+    try: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5,verify=False)
     except (r.exceptions.ConnectionError,r.exceptions.ReadTimeout): return {"Pos":num,"Val":False}
     m="wb"
     if resume:
@@ -122,7 +122,7 @@ def download(name, num, url, pos, resume=False):
 def multitest(url):
     '''Return how many threads server can accept'''
     def runtest(url):
-        return bool(r.Session().get(url,headers={"User-Agent":ua()},stream=True,timeout=10).status_code in [200,201,202,206])
+        return bool(r.Session().get(url,headers={"User-Agent":ua()},stream=True,timeout=10,verify=False).status_code in [200,201,202,206])
     try:
         value=[]
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -218,7 +218,7 @@ def racaty(url):
     d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
     _=r.post(url,headers={"User-Agent":ua()},data=d).text
     newurl=fr(_).xpath("//a[@id='uniqueExpirylink']/@href")[0]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"},verify=False)
     name=newurl.split("/")[-1]
     rawsize=int(data.headers['content-length'])
     return [newurl,rawsize,name]
@@ -428,6 +428,7 @@ if __name__ == "__main__":
     try:
         from lxml.html import fromstring as fr
         import requests as r
+        r.urllib3.disable_warnings(category=r.urllib3.exceptions.InsecureRequestWarning)
         import yaml
         from requests.exceptions import ChunkedEncodingError
     except ModuleNotFoundError:
