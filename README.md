@@ -1,9 +1,6 @@
 # file-downloader
 Last update : 24/05/2022
 
-#[Error when resume multithreaded!]
-
-
 ### INFO
 Built with : <img src="https://img.shields.io/badge/Python-3.8-brightgreen?style=for-the-badge&logo=python"><br>
 usage: ```prog.py [-h] {download,resume,paused}```
@@ -13,9 +10,9 @@ usage: ```prog.py [-h] {download,resume,paused}```
 - paused: Return list of paused download 
 
 ### Usage
-#### Download
+#### 1. Download
 
-usage: prog.py download [-h] [-d] [-c int] [-m mode] [-t int] url
+```usage: prog.py download [-h] [-d] [-c int] [-m mode] [-t int] url```
 
 positional arguments:<br>
 ```url```
@@ -27,10 +24,10 @@ optional arguments:
  - -m mode, --mode mode  Select singlethreaded or multithreaded download
  - -t int, --threads int Override threads count in config
  
-Example: ```python prog.py download https://mediafire.com/xxxxx```
+> Example: ```python prog.py download https://mediafire.com/xxxxx```
 
-#### Resume
-usage: prog.py resume [-h] [-c int] id
+#### 2. Resume
+```usage: prog.py resume [-h] [-c int] id```
 
 positional arguments:<br>
 ```id```
@@ -39,10 +36,10 @@ optional arguments:
   - -h, --help           show this help message and exit
   - -c int, --chunk int  Override chunk size in config
 
-Example: ```python prog.py resume 1```
+> Example: ```python prog.py resume 1```
 
-#### Paused
-usage: prog.py paused
+#### 3. Paused
+```usage: prog.py paused```
 
 ### Supported File Hosting
 - Mediafire
