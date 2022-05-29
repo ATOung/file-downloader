@@ -1,5 +1,9 @@
 # file-downloader
 Last update : 24/05/2022
+
+#[Error when resume multithreaded!]
+
+
 ### INFO
 Built with : <img src="https://img.shields.io/badge/Python-3.8-brightgreen?style=for-the-badge&logo=python"><br>
 usage: ```prog.py [-h] {download,resume,paused}```
