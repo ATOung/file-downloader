@@ -34,7 +34,7 @@ jobs:
     - name: Anonfiles
       run: python prog.py download https://anonfiles.com/jbC8Wak9y6/Dummy_zip
     - name: Bayfiles
-      run: python prog.py download https://bayfiles.com/H2Q6V6k3yd/Dummy_txt
+      run: python prog.py download https://bayfiles.com/JeK5W5kcyb/Dummy_zip
     - name: Zippyshare
       run: python prog.py download https://www42.zippyshare.com/v/wRdO7y1A/file.html
     - name: Hxfile
