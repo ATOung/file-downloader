@@ -32,7 +32,7 @@ jobs:
     - name: Racaty
       run: python prog.py download https://racaty.net/5ng0nisvvgo7
     - name: Anonfiles
-      run: python prog.py download https://anonfiles.com/z0PeVckby2/Dummy_txt
+      run: python prog.py download https://anonfiles.com/jbC8Wak9y6/Dummy_zip
     - name: Bayfiles
       run: python prog.py download https://bayfiles.com/H2Q6V6k3yd/Dummy_txt
     - name: Zippyshare
