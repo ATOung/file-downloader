@@ -25,18 +25,18 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Test to download a dummy file
-      run: |
-        echo "Mediafire"
-        python prog.py download https://www.mediafire.com/file/pygk38vfgykmm3u/Dummy.txt/file
-        echo "Solidfiles"
-        python prog.py download https://www.solidfiles.com/v/Lger2566WXWxk
-        echo "Racaty"
-        python prog.py download https://racaty.net/5ng0nisvvgo7
-        echo "Anonfiles"
-        python prog.py download https://anonfiles.com/z0PeVckby2/Dummy_txt
-        echo "Bayfiles"
-        python prog.py download https://bayfiles.com/H2Q6V6k3yd/Dummy_txt
-        echo "Zippyshare"
-        python prog.py download https://www42.zippyshare.com/v/wRdO7y1A/file.html
+    - name: Mediafire
+      run: python prog.py download https://www.mediafire.com/file/pygk38vfgykmm3u/Dummy.txt/file
+    - name: Solidfiles
+      run: python prog.py download https://www.solidfiles.com/v/Lger2566WXWxk
+    - name: Racaty
+      run: python prog.py download https://racaty.net/5ng0nisvvgo7
+    - name: Anonfiles
+      run: python prog.py download https://anonfiles.com/z0PeVckby2/Dummy_txt
+    - name: Bayfiles
+      run: python prog.py download https://bayfiles.com/H2Q6V6k3yd/Dummy_txt
+    - name: Zippyshare
+      run: python prog.py download https://www42.zippyshare.com/v/wRdO7y1A/file.html
+    - name: Hxfile
+      run: python prog.py download https://hxfile.co/bda8bcfgyefw
         
