@@ -72,7 +72,9 @@ def start():
 
 def download(name, num, url, pos, resume=False):
     '''Download function for multi and singlethread'''
-    try: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5,verify=False)
+    try: 
+        if num is None: data=r.Session().get(url,headers={"User-Agent":ua()},stream=True, timeout=5,verify=False)
+        else: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5,verify=False)
     except (r.exceptions.ConnectionError,r.exceptions.ReadTimeout): return {"Pos":num,"Val":False}
     m="wb"
     if resume:
@@ -100,20 +102,28 @@ def download(name, num, url, pos, resume=False):
                 rundl.dlded += len(l)
                 try: speed=str(int(rundl.dlded / (time.time() - (now)) / 1000))
                 except ZeroDivisionError: speed="0"
-                done=round(100 * rundl.dlded / num,2)
+                if num is None: done=None
+                else: done=round(100 * rundl.dlded / num,2)
                 sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
                 sys.stdout.flush()
             f.close()
-            _=os.path.getsize(f"{tmp}/{name}")
-            rundl.dlded=_
-            rundl.pos["start"]=rundl.pos["start"]+_
+            if num is not None:
+                _=os.path.getsize(f"{tmp}/{name}")
+                rundl.dlded=_
+                rundl.pos["start"]=rundl.pos["start"]+_
             return None
         except (r.exceptions.ConnectionError, ChunkedEncodingError,r.exceptions.ReadTimeout, KeyboardInterrupt) as e:
-            f.close()
-            _=os.path.getsize(f"{tmp}/{name}")
-            rundl.dlded=_
-            rundl.pos["start"]=rundl.pos["start"]+_
-            raise ThreadPaused from e
+            if not e == "KeyboardInterrupt": 
+                f.close()
+                if rundl.var['tmpsize'] is None:
+                    print(f"{re}[!] Download Error{de}")
+                    sys.exit(1)
+                _=os.path.getsize(f"{tmp}/{name}")
+                rundl.dlded=_
+                rundl.pos["start"]=rundl.pos["start"]+_
+                raise ThreadPaused from e
+                return
+            pass
     return None
 
 def multitest(url):
@@ -257,7 +267,7 @@ class dl:
         self.dlded=0
         self.pos={}
         self.res=None
-        self.var={'host':None, 'url': None, 'name': None, 'rawsize': None, 'resume': resume}
+        self.var={'host':None, 'url': None, 'name': None, 'rawsize': None, 'resume': resume, "can_paused": 'Yes','size':None}
 
     def ai(self):
         '''Calculate where the thread start and stop'''
@@ -328,9 +338,6 @@ class dl:
             if host == key:
                 try:
                     lxmlval=value(args.url)
-                    if lxmlval[1] is None:
-                        print(f"Empty content-length isn't supported{de}")
-                        sys.exit(1)
                     break
                 except IndexError:
                     print(f"{re}[X] File not found")
@@ -342,14 +349,24 @@ class dl:
         if args.direct:
             print(f"{de}{gra}>>> {dgr}[=] Link : {cy}{self.var['url']}{de}")
             return
+        if lxmlval[1] is None:
+            self.var['can_paused']="No"
+            self.var['size']="Null"
+            args.mode="single"
+        else:
+            self.var['size']=getsize(self.var['rawsize'])
         print(f"""{de}> [INFO] Filename : {self.var['name']}
-         Size : {getsize(self.var['rawsize'])}""")
+         Size : {self.var['size']}
+         Can Paused : {self.var['can_paused']}""")
         if args.mode == "single":
             if not self.var['resume']:
                 print(f"{ye}> [Info] Downloading")
                 try:
-                    rundl.pos={"start":0,"end":self.var['rawsize']}
-                    download(self.var['name'],self.var['rawsize'],self.var['url'],rundl.pos)
+                    if self.var['rawsize'] is None:
+                        download(self.var['name'],None,self.var['url'],None)
+                    else:
+                        rundl.pos={"start":0,"end":self.var['rawsize']}
+                        download(self.var['name'],self.var['rawsize'],self.var['url'],rundl.pos)
                     self.finish()
                     sys.exit()
                 except ThreadPaused:
@@ -378,7 +395,7 @@ class dl:
                 self.res=tmpres
             reslist=[self.res[i]["Val"] for i,_ in enumerate(self.res)]
             if all(reslist):
-                print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
+                print(f"\r\n{de}[>] Assembling file into one solid file. Please wait!",end="")
                 self.finish()
                 sys.exit()
             self.paused(mtdata=reslist)
