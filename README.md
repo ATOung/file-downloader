@@ -8,7 +8,7 @@ File-Downloader is a script that download file from (ex: mediafire) with command
 ```
 git clone https://github.com/XniceCraft/file-downloader
 ```
-2. Install python3
+2. Install python3 (if you aren't installed one)
 <br>• Windows: ```Download python from https://www.python.org/```
 <br>• Linux : ```sudo apt-get install python3```
 3. Install required python module
@@ -68,6 +68,6 @@ optional arguments:
 - Can select singlethreaded or multithreaded (default: multithreaded)
 
 ### Known Issues
-- Can't download with empty content-length
+- 
 
 > Please report if there is a bug on this script
