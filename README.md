@@ -68,6 +68,6 @@ optional arguments:
 - Can select singlethreaded or multithreaded (default: multithreaded)
 
 ### Known Issues
-- Return KeyError when content-length can't be retrieved.
+- Can't download with empty content-length
 
 > Please report if there is a bug on this script
