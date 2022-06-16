@@ -1,8 +1,5 @@
+"""File-downloader"""
 # -*- coding: utf-8 -*-
-"""
-File Downloader from python
-Don't steal any code from this script
-"""
 
 #pylint: disable=invalid-name,multiple-statements,line-too-long,eval-used,multiple-imports,import-outside-toplevel
 def ua():
@@ -26,7 +23,7 @@ def test():
         if ping < 500:
             print(f"{gr}[G] Your connection is good | Ping : {ping}ms")
         elif 500 <= ping < 1000:
-            print(f"{ye}[N] Your connection is average | Ping : {ping}ms")
+            print(f"{ye}[N] Your connection is normal | Ping : {ping}ms")
         else:
             print(f"{re}[B] Your connection is bad | Ping : {ping}ms")
     except (r.exceptions.ConnectTimeout,r.exceptions.ReadTimeout):
@@ -179,7 +176,8 @@ def mediafire(url):
     '''Return mediafire'''
     newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-    rawsize=int(data.headers['content-length'])
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
     return [newurl,rawsize,name]
 
@@ -190,7 +188,8 @@ def solidfiles(url):
     url=r.post("http://www.solidfiles.com"+temp.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
     newurl=findall('url=(.+)',fr(url).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-    rawsize=int(data.headers['content-length'])
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=r.utils.unquote(newurl.split('/')[-1])
     return [newurl,rawsize,name]
 
@@ -200,16 +199,18 @@ def tusfiles(url):
     d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
     newurl=r.post(url,headers={"User-Agent":ua()},data=d,allow_redirects=False).headers["location"]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"Keep-Alive"})
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=newurl.split("/")[-1]
-    rawsize=int(data.headers['content-length'])
     return [newurl,rawsize,name]
 
 def anonbayfiles(url):
     '''Return anonbay and bayfiles'''
     newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id=\"download-url\"]/@href')[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
-    rawsize=int(data.headers['content-length'])
     return [newurl,rawsize,name]
 
 def racaty(url):
@@ -219,8 +220,9 @@ def racaty(url):
     _=r.post(url,headers={"User-Agent":ua()},data=d).text
     newurl=fr(_).xpath("//a[@id='uniqueExpirylink']/@href")[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"},verify=False)
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=newurl.split("/")[-1]
-    rawsize=int(data.headers['content-length'])
     return [newurl,rawsize,name]
 
 def zippyshare(url):
@@ -231,8 +233,9 @@ def zippyshare(url):
     var=var.replace(f"({_})",f"\"{eval(_)}\"")
     newurl="https://"+(url).split("/")[2]+eval(var)
     data=r.Session().head(newurl,headers={"User-Agent":ua()})
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
-    rawsize=int(data.headers['content-length'])
     return [newurl,rawsize,name]
 
 def hxfile(url):
@@ -242,8 +245,9 @@ def hxfile(url):
     var=r.post(url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
     newurl=fr(var).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
     data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+    try: rawsize=int(data.headers['content-length'])
+    except KeyError: rawsize=None
     name=newurl.split("/")[-1]
-    rawsize=int(data.headers['content-length'])
     return [newurl,rawsize,name]
 
 #Main handler class
@@ -324,6 +328,9 @@ class dl:
             if host == key:
                 try:
                     lxmlval=value(args.url)
+                    if lxmlval[1] is None:
+                        print(f"Empty content-length isn't supported{de}")
+                        sys.exit(1)
                     break
                 except IndexError:
                     print(f"{re}[X] File not found")
