@@ -16,9 +16,9 @@ def test():
     print(f"{gra}[%] {dbl}Testing your connection")
     try:
         print(f"{de}{dgr}[%] Pinging to {wh}Singapore {dbl}Firstmedia speedtest server")
-        s=time.time()
+        s=time()
         r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080", timeout=3)
-        s2=time.time()
+        s2=time()
         ping=int((round(s2 - s, 3))*1000)
         if ping < 500:
             print(f"{gr}[G] Your connection is good | Ping : {ping}ms")
@@ -63,7 +63,7 @@ def start():
         os.system(clear)
         banner()
         test()
-        time.sleep(2)
+        sleep(2)
         os.system(clear)
         banner()
         return
@@ -72,7 +72,7 @@ def start():
 
 def download(name, num, url, pos, resume=False):
     '''Download function for multi and singlethread'''
-    try: 
+    try:
         if num is None: data=r.Session().get(url,headers={"User-Agent":ua()},stream=True, timeout=5,verify=False)
         else: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5,verify=False)
     except (r.exceptions.ConnectionError,r.exceptions.ReadTimeout): return {"Pos":num,"Val":False}
@@ -96,16 +96,20 @@ def download(name, num, url, pos, resume=False):
                 return {"Pos":num,"Val":False}
     with open(f"{tmp}/{name}",m) as f:
         try:
-            now=time.time()
+            now=time()
             for l in data.iter_content(chunk_size=args.chunk*1024):
-                f.write(l)
-                rundl.dlded += len(l)
-                try: speed=str(int(rundl.dlded / (time.time() - (now)) / 1000))
-                except ZeroDivisionError: speed="0"
-                if num is None: done=None
-                else: done=round(100 * rundl.dlded / num,2)
-                sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
-                sys.stdout.flush()
+                try:
+                    f.write(l)
+                    rundl.dlded += len(l)
+                    try: speed=str(int(rundl.dlded / (time() - (now)) / 1000))
+                    except ZeroDivisionError: speed="0"
+                    if num is None: done=None
+                    else: done=round(100 * rundl.dlded / num,2)
+                    sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
+                    sys.stdout.flush()
+                except KeyboardInterrupt as e:
+                    if num is not None:
+                        raise KeyboardInterrupt from e
             f.close()
             if num is not None:
                 _=os.path.getsize(f"{tmp}/{name}")
@@ -113,18 +117,15 @@ def download(name, num, url, pos, resume=False):
                 rundl.pos["start"]=rundl.pos["start"]+_
             return None
         except (r.exceptions.ConnectionError, ChunkedEncodingError,r.exceptions.ReadTimeout, KeyboardInterrupt) as e:
-            if not e == "KeyboardInterrupt": 
-                f.close()
-                if rundl.var['tmpsize'] is None:
-                    print(f"{re}[!] Download Error{de}")
-                    sys.exit(1)
-                _=os.path.getsize(f"{tmp}/{name}")
-                rundl.dlded=_
-                rundl.pos["start"]=rundl.pos["start"]+_
-                raise ThreadPaused from e
-                return
-            pass
-    return None
+            f.close()
+            if rundl.var['tmpsize'] is None:
+                print(f"{re}[!] Download Error{de}")
+                sys.exit(1)
+            _=os.path.getsize(f"{tmp}/{name}")
+            rundl.dlded=_
+            rundl.pos["start"]=rundl.pos["start"]+_
+            raise ThreadPaused from e
+            return
 
 def multitest(url):
     '''Return how many threads server can accept'''
@@ -151,11 +152,11 @@ def multidl_handler(name, u, tmpsize, resume=False, thres=None):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             failedthread=[i+1 for i in range(len(thres)) if not thres[i]]
             run=[executor.submit(download,name,_,u,rundl.pos[_],True) for _ in failedthread]
-            now=time.time()
+            now=time()
             try:
                 while False in [i.done() for i in run]:
-                    time.sleep(1)
-                    try: speed=str(int(rundl.dlded / (time.time() - (now+1)) / 1000))
+                    sleep(1)
+                    try: speed=str(int(rundl.dlded / (time() - (now+1)) / 1000))
                     except ZeroDivisionError: speed="0"
                     done=round(100 * rundl.dlded / tmpsize,2)
                     sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
@@ -167,11 +168,11 @@ def multidl_handler(name, u, tmpsize, resume=False, thres=None):
         print(f"{ye}> [Info] Downloading")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             run=[executor.submit(download,name,_+1,u,rundl.pos[_+1]) for _ in range(args.threads)]
-            now=time.time()
+            now=time()
             try:
                 while False in [i.done() for i in run]:
-                    time.sleep(1)
-                    try: speed=str(int(rundl.dlded / (time.time() - (now+1)) / 1000))
+                    sleep(1)
+                    try: speed=str(int(rundl.dlded / (time() - (now+1)) / 1000))
                     except ZeroDivisionError: speed="0"
                     done=round(100 * rundl.dlded / tmpsize,2)
                     sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
@@ -395,7 +396,7 @@ class dl:
                 self.res=tmpres
             reslist=[self.res[i]["Val"] for i,_ in enumerate(self.res)]
             if all(reslist):
-                print(f"\r\n{de}[>] Assembling file into one solid file. Please wait!",end="")
+                print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
                 self.finish()
                 sys.exit()
             self.paused(mtdata=reslist)
@@ -445,7 +446,7 @@ if __name__ == "__main__":
     from platform import system as ps
     from shutil import move
     from re import findall
-    import sys,time,os,json,argparse,concurrent.futures
+    import sys,os,json,argparse,concurrent.futures
     if sys.version_info[0] != 3:
         print("[Err] Run with python3!")
         sys.exit()
@@ -503,6 +504,7 @@ if __name__ == "__main__":
     subparser=parser.add_subparsers(dest="command",required=True)
     parser1=subparser.add_parser("download",help="Download a file from url")
     parser1.add_argument("-d","--grabdirectlink",help="Return direct download link",dest="direct",action="store_true")
+    parser1.add_argument("-ns","--no-sleep",help="Return direct download link",dest="nosleep",action="store_true")
     parser1.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config",default=tmp[2])
     parser1.add_argument("-m","--mode",metavar="mode",help="Select singlethreaded or multithreaded download",choices=["single","multi"],default=tmp[4])
     parser1.add_argument("-t","--threads",metavar="int",type=int,help="Override threads count in config",choices=range(2,9),default=tmp[3])
@@ -510,6 +512,7 @@ if __name__ == "__main__":
     parser2=subparser.add_parser("resume",help="Resume paused download by selecting the id")
     parser2.add_argument("id",type=int,help="That file id you wanna resume")
     parser2.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config",default=tmp[2])
+    parser2.add_argument("-ns","--no-sleep",help="Return direct download link",dest="nosleep",action="store_true")
     parser3=subparser.add_parser("paused",help="Get list of paused download")
     args=parser.parse_args()
 
@@ -520,6 +523,12 @@ if __name__ == "__main__":
     if not os.path.isdir(complete): os.mkdir(complete)
 
     if args.command in ["download","resume"]:
+        if args.nosleep:
+            from time import time
+            def sleep(a): #pylint: disable=unused-argument
+                """0 time Sleep"""
+                return
+        else: from time import time, sleep
         if args.command == "resume":
             rundl=dl(resume=True)
             if not os.path.exists("paused.info"): get_paused(quiet=True)
