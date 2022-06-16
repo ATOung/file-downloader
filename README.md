@@ -1,13 +1,22 @@
-# file-downloader
-Last update : 24/05/2022
+# File-Downloader
 
-### INFO
-Built with : <img src="https://img.shields.io/badge/Python-3.8-brightgreen?style=for-the-badge&logo=python"><br>
-usage: ```prog.py [-h] {download,resume,paused}```
+### About
+File-Downloader is a script that download file from (ex: mediafire) with command line.
 
-- download: Download a file
-- resume: Resume a paused download by selecting its id
-- paused: Return list of paused download 
+### Installation
+1. Clone this repository
+```
+git clone https://github.com/XniceCraft/file-downloader
+```
+2. Install python3
+<br>• Windows: ```Download python from https://www.python.org/```
+<br>• Linux : ```sudo apt-get install python3```
+3. Install required python module
+```
+pip install -r requirements.txt
+```
+
+To use the program read the usage.
 
 ### Usage
 #### 1. Download
@@ -57,5 +66,8 @@ optional arguments:
 - Pause (CTRL-C for pause)
 - Grab direct download link with -d argument
 - Can select singlethreaded or multithreaded (default: multithreaded)
+
+### Known Issues
+- Return KeyError when content-length can't be retrieved.
 
 > Please report if there is a bug on this script
