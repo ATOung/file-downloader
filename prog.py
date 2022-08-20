@@ -9,6 +9,7 @@ from re import findall
 from time import time, sleep
 from typing import Union
 from threading import Event as tevent
+from zippyshare_downloader import extract_info as zippyinfo
 import sys, os, json, argparse, concurrent.futures
 if sys.version_info[0] != 3:
     print("[Err] Run with python3!")
@@ -472,18 +473,8 @@ class Grabber:
 
     def zippyshare(self) -> list:
         '''Return zippyshare'''
-        var=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1][:-1]
-        var=var.replace("document.getElementById('dlbutton').href =","")
-        _=findall(r"\((.+)\)",var)[0]
-        var=var.replace(f"({_})",f"\"{eval(_)}\"")
-        newurl="https://"+(self.url).split("/")[2]+eval(var)
-        data=r.Session().head(newurl,headers={"User-Agent":ua()})
-        try:
-            rawsize=int(data.headers['content-length'])
-        except KeyError:
-            rawsize=None
-        name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
-        return [newurl,rawsize,name]
+        res=zippyinfo(self.url, download=False)
+        return [res.download_url, res.size, res.name]
 
     def hxfile(self):
         '''Return hxfile'''
