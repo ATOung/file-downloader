@@ -32,9 +32,7 @@ jobs:
     - name: Anonfiles
       run: python prog.py download https://anonfiles.com/6ded8d44y7/20220820_135747_1_png
 #Anonfiles as same as Bayfiles
-#    - name: Bayfiles
-#      run: python prog.py download https://bayfiles.com/JeK5W5kcyb/Dummy_zip
     - name: Zippyshare
       run: python prog.py download https://www6.zippyshare.com/v/gZ7oM3DH/file.html
     - name: Hxfile
-      run: python prog.py download https://hxfile.co/dpnia0tpgmao
+      run: python prog.py download https://hxfile.co/41gk09mhtc89
