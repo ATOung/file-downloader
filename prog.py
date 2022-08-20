@@ -1,21 +1,67 @@
-"""File-downloader"""
-# -*- coding: utf-8 -*-
+'''File Downloader'''
 
-#pylint: disable=invalid-name,multiple-statements,line-too-long,eval-used,multiple-imports,import-outside-toplevel
-def ua():
-    '''Return User-Agent'''
-    return choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"])
+#pylint: disable=line-too-long, invalid-name, eval-used, import-outside-toplevel
+from math import floor
+from random import choice
+from platform import system as ps
+from shutil import move
+from re import findall
+from time import time, sleep
+from typing import Union
+from threading import Event as tevent
+import sys, os, json, argparse, concurrent.futures
+if sys.version_info[0] != 3:
+    print("[Err] Run with python3!")
+    sys.exit()
+
+try:
+    from lxml.html import fromstring as fr
+    from requests.exceptions import ChunkedEncodingError
+    import requests as r, yaml
+    r.urllib3.disable_warnings(category=r.urllib3.exceptions.InsecureRequestWarning)
+except ModuleNotFoundError:
+    print("Install required package with \'pip install -r requirements.txt\'")
+    sys.exit()
+
+kill_event=tevent()
+class FileHostingNotSupported(Exception):
+    '''Exception for not supported file hosting'''
+    def __init__(self):
+        super().__init__("File Hosting doesn't supported. Please check your url!")
 
 class ThreadPaused(Exception):
     '''Exception for paused thread'''
 
-def test():
+def banner(mode: str) -> None:
+    '''Banner'''
+    print(rf"""{de} ______ _ _         _____  _
+|  ____(_) |       |  __ \| |
+| |__   _| | ___   | |  | | |
+|  __| | | |/ _ \  | |  | | |
+| |    | | |  __/  | |__| | |____
+|_|    |_|_|\___   |_____/|______|
+Author : https://github.com/XniceCraft
+Mode : {mode}
+""")
+
+def start(mode: str, url: str) -> None:
+    '''Start'''
+    if "https://" in url or "http://" in url:
+        os.system(clear)
+        banner(mode)
+        test()
+        sleep(2)
+        os.system(clear)
+        banner(mode)
+        return
+    print(f"{re}[Err] Invalid URL scheme. There is no http/https in URL{de}")
+    sys.exit()
+
+def test() -> None:
     '''Test your internet ping with singapore firstmedia server.'''
-    print(f"{gra}[%] {dbl}Testing your connection")
+    print(f"{re}[{ye}%{re}] {cy}Testing your connection{de}")
     try:
-        print(f"{de}{dgr}[%] Pinging to {wh}Singapore {dbl}Firstmedia speedtest server")
+        print(f"{re}[{wh}%{re}] {ye}Pinging to Singapore Firstmedia speedtest server")
         s=time()
         r.get("http://sg-speedtest.fast.net.id.prod.hosts.ooklaserver.net:8080", timeout=3)
         s2=time()
@@ -23,7 +69,7 @@ def test():
         if ping < 500:
             print(f"{gr}[G] Your connection is good | Ping : {ping}ms")
         elif 500 <= ping < 1000:
-            print(f"{ye}[N] Your connection is normal | Ping : {ping}ms")
+            print(f"{ye}[N] Your connection is ok | Ping : {ping}ms")
         else:
             print(f"{re}[B] Your connection is bad | Ping : {ping}ms")
     except (r.exceptions.ConnectTimeout,r.exceptions.ReadTimeout):
@@ -33,557 +79,572 @@ def test():
         print(f"{re}[Err] Connection Error!{de}")
         sys.exit()
 
-def banner():
-    '''Banner'''
-    print(rf"""{de} ______ _ _         _____  _
-|  ____(_) |       |  __ \| |
-| |__   _| | ___   | |  | | |
-|  __| | | |/ _ \  | |  | | |
-| |    | | |  __/  | |__| | |____
-|_|    |_|_|\___   |_____/|______|
-Author : https://github.com/XniceCraft
-Mode : {args.mode}
-""")
+def ua() -> str:
+    '''Return Random User-Agent'''
+    return choice(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36","Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"])
 
-def getsize(a):
-    '''Return file size with its unit'''
-    if a < 1024:
-        v=str(a) + " Bytes"
-    elif 1024 <= a < 1048576:
-        v=str(round(a / 1024, 2)) + " KB"
-    elif 1048576 <= a < 1073741824:
-        v=str(round(a / 1048576, 2)) + " MB"
-    elif a >= 1073741824:
-        v=str(round(a / 1073741824, 2)) + " GB"
-    return v
-
-def start():
-    '''Start'''
-    if "https://" in args.url or "http://" in args.url:
-        os.system(clear)
-        banner()
-        test()
-        sleep(2)
-        os.system(clear)
-        banner()
-        return
-    print(f"{re}[Err] Invalid URL scheme. There is no http/https in URL{de}")
-    sys.exit()
-
-def download(name, num, url, pos, resume=False):
-    '''Download function for multi and singlethread'''
-    try:
-        if num is None: data=r.Session().get(url,headers={"User-Agent":ua()},stream=True, timeout=5,verify=False)
-        else: data=r.Session().get(url,headers={"User-Agent":ua(),"Range":f"bytes={pos['start']}-{pos['end']}"},stream=True, timeout=5,verify=False)
-    except (r.exceptions.ConnectionError,r.exceptions.ReadTimeout): return {"Pos":num,"Val":False}
-    m="wb"
-    if resume:
-        m="ab"
-        rundl.pos[num]["start"]-=os.path.getsize(f"{tmp}/{name}-{num}")
-    if args.mode == "multi":
-        with open(f"{tmp}/{name}-{num}",m) as f:
-            try:
-                for l in data.iter_content(chunk_size=args.chunk*1024):
-                    f.write(l)
-                    rundl.dlded += len(l)
-                    if kill_event.is_set(): raise KeyboardInterrupt
-                f.close()
-                rundl.pos[num]["start"]+=os.path.getsize(f"{tmp}/{name}-{num}")
-                return {"Pos":num,"Val":True}
-            except (r.exceptions.ConnectionError, ChunkedEncodingError,r.exceptions.ReadTimeout, KeyboardInterrupt):
-                f.close()
-                rundl.pos[num]["start"]+=os.path.getsize(f"{tmp}/{name}-{num}")
-                return {"Pos":num,"Val":False}
-    with open(f"{tmp}/{name}",m) as f:
-        try:
-            now=time()
-            for l in data.iter_content(chunk_size=args.chunk*1024):
-                try:
-                    f.write(l)
-                    rundl.dlded += len(l)
-                    try: speed=str(int(rundl.dlded / (time() - (now)) / 1000))
-                    except ZeroDivisionError: speed="0"
-                    if num is None: done=None
-                    else: done=round(100 * rundl.dlded / num,2)
-                    sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
-                    sys.stdout.flush()
-                except KeyboardInterrupt as e:
-                    if num is not None:
-                        raise KeyboardInterrupt from e
-            f.close()
-            if num is not None:
-                _=os.path.getsize(f"{tmp}/{name}")
-                rundl.dlded=_
-                rundl.pos["start"]=rundl.pos["start"]+_
-            return None
-        except (r.exceptions.ConnectionError, ChunkedEncodingError,r.exceptions.ReadTimeout, KeyboardInterrupt) as e:
-            f.close()
-            if rundl.var['tmpsize'] is None:
-                print(f"{re}[!] Download Error{de}")
-                sys.exit(1)
-            _=os.path.getsize(f"{tmp}/{name}")
-            rundl.dlded=_
-            rundl.pos["start"]=rundl.pos["start"]+_
-            raise ThreadPaused from e
-            return
-
-def multitest(url):
-    '''Return how many threads server can accept'''
-    def runtest(url):
-        return bool(r.Session().get(url,headers={"User-Agent":ua()},stream=True,timeout=10,verify=False).status_code in [200,201,202,206])
-    try:
-        value=[]
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            result=[executor.submit(runtest,url) for _ in range(args.threads)]
-            for future in concurrent.futures.as_completed(result):
-                value.append(future.result())
-        return value.count(True)
-    except r.exceptions.ConnectionError:
-        print(f"{re}[Err] Connection Error{de}")
-        sys.exit()
-    except r.exceptions.ReadTimeout:
-        print(f"{re}[Err] Connection Timeout after 10000ms")
-        sys.exit()
-
-def multidl_handler(name, u, tmpsize, resume=False, thres=None):
-    '''Handle the multithreaded download'''
-    if resume:
-        print(f"{ye}> [Info] Resuming")
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            failedthread=[i+1 for i in range(len(thres)) if not thres[i]]
-            run=[executor.submit(download,name,_,u,rundl.pos[_],True) for _ in failedthread]
-            now=time()
-            try:
-                while False in [i.done() for i in run]:
-                    sleep(1)
-                    try: speed=str(int(rundl.dlded / (time() - (now+1)) / 1000))
-                    except ZeroDivisionError: speed="0"
-                    done=round(100 * rundl.dlded / tmpsize,2)
-                    sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
-                    sys.stdout.flush()
-            except KeyboardInterrupt:
-                print(f"\n{re}[I] Interrupted")
-                kill_event.set()
-    elif not resume:
-        print(f"{ye}> [Info] Downloading")
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            run=[executor.submit(download,name,_+1,u,rundl.pos[_+1]) for _ in range(args.threads)]
-            now=time()
-            try:
-                while False in [i.done() for i in run]:
-                    sleep(1)
-                    try: speed=str(int(rundl.dlded / (time() - (now+1)) / 1000))
-                    except ZeroDivisionError: speed="0"
-                    done=round(100 * rundl.dlded / tmpsize,2)
-                    sys.stdout.write(cy+"\r"+"> [Downloading] Progress : "+str(done)+"% | Speed: "+speed+ " KB/s")
-                    sys.stdout.flush()
-            except KeyboardInterrupt:
-                print(f"\n{re}[I] Interrupted")
-                kill_event.set()
-    return run
-
-#Return Lxml Data
-def mediafire(url):
-    '''Return mediafire'''
-    newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
-    return [newurl,rawsize,name]
-
-def solidfiles(url):
-    '''Return solidfiles'''
-    temp=fr(r.get(url,headers={"User-Agent":ua()}).text)
-    d="csrfmiddlewaretoken="+temp.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
-    url=r.post("http://www.solidfiles.com"+temp.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
-    newurl=findall('url=(.+)',fr(url).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=r.utils.unquote(newurl.split('/')[-1])
-    return [newurl,rawsize,name]
-
-def tusfiles(url):
-    '''Return tusfiles'''
-    temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@method=\"POST\"]/input/@value")
-    d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
-    newurl=r.post(url,headers={"User-Agent":ua()},data=d,allow_redirects=False).headers["location"]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"Keep-Alive"})
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=newurl.split("/")[-1]
-    return [newurl,rawsize,name]
-
-def anonbayfiles(url):
-    '''Return anonbay and bayfiles'''
-    newurl=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath('//a[@id=\"download-url\"]/@href')[0]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
-    return [newurl,rawsize,name]
-
-def racaty(url):
-    '''Return racaty'''
-    temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@id=\"getExtoken\"]/input/@value")
-    d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
-    _=r.post(url,headers={"User-Agent":ua()},data=d).text
-    newurl=fr(_).xpath("//a[@id='uniqueExpirylink']/@href")[0]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"},verify=False)
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=newurl.split("/")[-1]
-    return [newurl,rawsize,name]
-
-def zippyshare(url):
-    '''Return zippyshare'''
-    var=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1][:-1]
-    var=var.replace("document.getElementById('dlbutton').href =","")
-    _=findall(r"\((.+)\)",var)[0]
-    var=var.replace(f"({_})",f"\"{eval(_)}\"")
-    newurl="https://"+(url).split("/")[2]+eval(var)
-    data=r.Session().head(newurl,headers={"User-Agent":ua()})
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
-    return [newurl,rawsize,name]
-
-def hxfile(url):
-    '''Return hxfile'''
-    temp=fr(r.get(url,headers={"User-Agent":ua()}).text).xpath("//form[@name=\"F1\"]/input/@value")
-    d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free&method_premium=1"
-    var=r.post(url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
-    newurl=fr(var).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
-    data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
-    try: rawsize=int(data.headers['content-length'])
-    except KeyError: rawsize=None
-    name=newurl.split("/")[-1]
-    return [newurl,rawsize,name]
-
-#Main handler class
-class dl:
+class DL:
     '''Main class to handle the download'''
-    def __init__(self, resume=False):
-        self.dlded=0
-        self.pos={}
-        self.res=None
-        self.var={'host':None, 'url': None, 'name': None, 'rawsize': None, 'resume': resume, "can_paused": 'Yes','size':None}
+    def __init__(self, chunk: int, mode: str, threads: int, url: str, tmp_dir: str, complete_dir: str, direct: bool=False, resume: Union[bool, dict]=False):
+        #Temporary directory
+        self.tmp_dir=tmp_dir
+        #Completed download directory
+        self.complete_dir=complete_dir
+        #File name
+        self.fname: str=None
+        #File size with its unit
+        self.modified_size: str=None
+        #File size on bytes
+        self.rawsize: Union[int, None]=None
+        #Url grab result
+        self.url_grab: str=None
+        #Bytes that already downloaded
+        self.downloaded_bytes: int=0
+        #Array of boolean that returned from multithread_list
+        self.threads_data_list=[]
+        #Array of position number and boolean value
+        self.multithread_list=[]
+        #User input url
+        self.url=url
+        #Multithreaded or singlethreaded
+        self.mode=mode
+        #Chunk size
+        self.chunk=chunk
+        #Resume or not
+        self.resume=resume
+        #Return direct url or not
+        self.direct=direct
+        #File download position
+        self.download_pos={}
+        self.data={'threads': threads, "can_paused": 'Yes'}
+        #Self.host
+        if "mediafire.com" in url:
+            self.host="mediafire"
+        elif "solidfiles.com" in url:
+            self.host="solidfiles"
+        elif "tusfiles.com" in url:
+            self.host="tusfiles"
+        elif "bayfiles.com" in url or "anonfiles.com" in url:
+            self.host="anonbayfiles"
+        elif "racaty.net" in url:
+            self.host="racaty"
+        elif "zippyshare.com" in url:
+            self.host="zippyshare"
+        elif "hxfile.co" in url:
+            self.host="hxfile"
+        else:
+            raise FileHostingNotSupported
+        if isinstance(resume, dict):
+            self.fname=resume["name"]
+            self.downloaded_bytes=resume["downloaded"]
+            self.rawsize=resume["rawsize"]
+            self.download_pos=resume["download_pos"]
+            if mode == "multi":
+                self.multithread_list=resume["threads_result"]
+                self.threads_data_list=[i["Val"] for i in self.multithread_list]
 
     def ai(self):
         '''Calculate where the thread start and stop'''
-        for i in range(args.threads):
-            if i == 0: rundl.pos[1]={"start":0, "end":floor(self.var["rawsize"]/args.threads)}
-            elif i+1 == args.threads: rundl.pos[i+1]={"start":floor(self.var["rawsize"]/args.threads)*i+1, "end":self.var["rawsize"]}
-            else: rundl.pos[i+1]={"start":floor(self.var["rawsize"]/args.threads)*i+1, "end":floor(self.var["rawsize"]/args.threads)*(i+1)}
+        for i in range(self.data['threads']):
+            if i == 0:
+                self.download_pos[1]={"start":0, "end":floor(self.rawsize/self.data['threads'])}
+            elif i+1 == self.data['threads']:
+                self.download_pos[i+1]={"start":floor(self.rawsize/self.data['threads'])*i+1, "end":self.rawsize}
+            else:
+                self.download_pos[i+1]={"start":floor(self.rawsize/self.data['threads'])*i+1, "end":floor(self.rawsize/self.data['threads'])*(i+1)}
+
+    def download(self, pos: Union[dict, None]=None, thread_number: Union[int, None]=None):
+        '''Download function for multi and singlethread'''
+        try:
+            if self.mode == 'multi' or bool(self.mode == 'single' and self.resume):
+                resp=r.Session().get(self.url_grab, headers={"User-Agent":ua(), "Range":f"bytes={pos['start']}-{pos['end']}"}, stream=True, timeout=5, verify=False)
+            elif self.mode == 'single':
+                resp=r.Session().get(self.url_grab, headers={"User-Agent":ua()}, stream=True, timeout=5, verify=False)
+            if not self.resume:
+                io_mode="wb"
+            elif self.resume:
+                io_mode="ab"
+                if self.mode == 'multi':
+                    self.download_pos[thread_number]["start"]-=os.path.getsize(f"{self.tmp_dir}/{self.fname}-{thread_number}")
+        except (r.exceptions.ConnectionError, r.exceptions.ReadTimeout):
+            if self.mode == "single":
+                return {"Pos":1,"Val":False}
+            return {"Pos":thread_number,"Val":False}
+        if self.mode == "multi":
+            with open(f"{self.tmp_dir}/{self.fname}-{thread_number}",io_mode) as f:
+                try:
+                    for l in resp.iter_content(chunk_size=self.chunk*1024):
+                        f.write(l)
+                        self.downloaded_bytes += len(l)
+                        if kill_event.is_set():
+                            raise KeyboardInterrupt
+                    f.close()
+                    self.download_pos[thread_number]["start"]+=os.path.getsize(f"{self.tmp_dir}/{self.fname}-{thread_number}")
+                    return {"Pos":thread_number,"Val":True}
+                except (r.exceptions.ConnectionError, ChunkedEncodingError,r.exceptions.ReadTimeout, KeyboardInterrupt):
+                    f.close()
+                    self.download_pos[thread_number]["start"]+=os.path.getsize(f"{self.tmp_dir}/{self.fname}-{thread_number}")
+                    return {"Pos":thread_number,"Val":False}
+        with open(f"{self.tmp_dir}/{self.fname}",io_mode) as f:
+            try:
+                start_timer=time()
+                for data_value in resp.iter_content(chunk_size=self.chunk*1024):
+                    try:
+                        f.write(data_value)
+                        self.downloaded_bytes += len(data_value)
+                        if self.downloaded_bytes != 0:
+                            speed=int(self.downloaded_bytes / (time() - (start_timer)) / 1000)
+                        else:
+                            speed=0
+                        if self.rawsize is None:
+                            done="Unavailable"
+                        else:
+                            done=f"{round(100 * self.downloaded_bytes / self.rawsize,2)}%"
+                        sys.stdout.write(f"{cy}\r> [Downloading] Progress : {done} | Speed: {speed} KB/s")
+                        sys.stdout.flush()
+                    except KeyboardInterrupt as e:
+                        if self.downloaded_bytes is not None:
+                            raise KeyboardInterrupt from e
+                f.close()
+                if self.downloaded_bytes is not None:
+                    _=os.path.getsize(f"{self.tmp_dir}/{self.fname}")
+                    self.downloaded_bytes=_
+                    self.download_pos["start"]+=self.download_pos["start"]+_
+            except (r.exceptions.ConnectionError, ChunkedEncodingError, r.exceptions.ReadTimeout, KeyboardInterrupt) as e:
+                f.close()
+                if self.rawsize is None:
+                    print(f"{re}[!] Download Error{de}")
+                    sys.exit(1)
+                _=os.path.getsize(f"{self.tmp_dir}/{self.fname}")
+                self.downloaded_bytes=_
+                self.download_pos["start"]+=_
+                raise ThreadPaused from e
 
     def finish(self):
         '''Handle when the download finished'''
-        if args.command == "resume":
-            os.remove(f"{tmp}/{self.var['name']}.log")
-        if args.mode == "multi":
-            with open(f"{tmp}/{self.var['name']}","ab") as f:
-                for i in range(args.threads):
-                    with open(f"{tmp}/{self.var['name']}-{i+1}","rb") as h:
-                        f.write(h.read())
+        if self.resume and os.path.isfile(f"{self.tmp_dir}/{self.fname}.log"):
+            os.remove(f"{self.tmp_dir}/{self.fname}.log")
+        if self.mode == "multi":
+            with open(f"{self.tmp_dir}/{self.fname}","ab") as file:
+                for i in range(self.data['threads']):
+                    with open(f"{self.tmp_dir}/{self.fname}-{i+1}","rb") as h:
+                        file.write(h.read())
                     h.close()
-                    os.remove(f"{tmp}/{self.var['name']}-{i+1}")
-            f.close()
-        move(rf"{tmp}/{self.var['name']}",rf"{complete}/{self.var['name']}")
-        print(f"{gr}\n> [Finished] Success download {self.var['name']}{de}")
+                    os.remove(f"{self.tmp_dir}/{self.fname}-{i+1}")
+            file.close()
+        move(rf"{self.tmp_dir}/{self.fname}",rf"{self.complete_dir}/{self.fname}")
+        print(f"{gr}\n> [Finished] Success download {self.fname}{de}")
 
-    def paused(self, mtdata=None):
+    def multidl_handler(self):
+        '''Handle the multithreaded download'''
+        if self.resume:
+            print(f"{ye}> [Info] Resuming")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                failedthread=[val["Pos"] for val in self.multithread_list if not val["Val"]]
+                run=[executor.submit(self.download, self.download_pos[_], _) for _ in failedthread]
+                now=time()
+                try:
+                    old_downloaded_bytes=self.downloaded_bytes
+                    while False in [i.done() for i in run]:
+                        sleep(1)
+                        try:
+                            speed=int((self.downloaded_bytes-old_downloaded_bytes) / (time() - (now+1)) / 1000)
+                        except ZeroDivisionError:
+                            speed=0
+                        done=f"{round(100 * self.downloaded_bytes / self.rawsize,2)}%"
+                        sys.stdout.write(f"{cy}\r> [Downloading] Progress : {done} | Speed: {speed} KB/s")
+                        sys.stdout.flush()
+                except KeyboardInterrupt:
+                    kill_event.set()
+                    sys.stdout.write(f"{cy}\r> [Downloading] Progress : {done} | Speed: {speed} KB/s")
+                    print(f"\n{re}[I] Interrupted")
+        elif not self.resume:
+            print(f"{ye}> [Info] Downloading")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                run=[executor.submit(self.download, self.download_pos[thread+1], thread+1) for thread in range(self.data['threads'])]
+                now=time()
+                try:
+                    while False in [i.done() for i in run]:
+                        sleep(1)
+                        try:
+                            speed=int(self.downloaded_bytes / (time() - (now+1)) / 1000)
+                        except ZeroDivisionError:
+                            speed=0
+                        done=f"{round(100 * self.downloaded_bytes / self.rawsize, 2)}%"
+                        sys.stdout.write(f"{cy}\r> [Downloading] Progress : {done} | Speed: {speed} KB/s")
+                        sys.stdout.flush()
+                except KeyboardInterrupt:
+                    kill_event.set()
+                    sys.stdout.write(f"{cy}\r> [Downloading] Progress : {done} | Speed: {speed} KB/s")
+                    print(f"\n{re}[I] Interrupted")
+        return run
+
+    @staticmethod
+    def multithreaded_test(url, threads):
+        '''Test how much threads server can handle'''
+        def runtest(req_session_obj, url):
+            return bool(req_session_obj.get(url, headers={"User-Agent":ua()}, stream=True, timeout=10, verify=False).status_code in [200,201,202,206])
+        try:
+            with r.Session() as req:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    result=[executor.submit(runtest, req, url) for _ in range(threads)]
+                    value=[future.result() for future in concurrent.futures.as_completed(result)]
+            return value.count(True)
+        except r.exceptions.ConnectionError:
+            print(f"{re}[Err] Connection Error{de}")
+            sys.exit()
+        except r.exceptions.ReadTimeout:
+            print(f"{re}[Err] Connection Timeout after 10000ms")
+            sys.exit()
+
+    def paused(self):
         '''Paused Handler'''
-        self.var['resume']=True
-        if args.mode == "single":
+        self.resume=True
+        if self.mode == "single":
             print(f"{gr}\r\n> Download paused. Resume, exit or remove(res/e/rem)?")
             ask=input("> ")
             if ask.lower() == "e" or ask.lower() == "exit":
-                with open(f"{tmp}/{self.var['name']}.log","w",encoding="utf-8") as f:
-                    f.write(f"Source: \'{args.url}\'\nSize: {self.var['rawsize']}\nName: \'{self.var['name']}\'\nDownloaded: {rundl.dlded}\nThreads: 1\nMode: single\nThread-Pos: {rundl.pos}\nReturn-Pos: False")
+                with open(f"{self.tmp_dir}/{self.fname}.log", "w", encoding="utf-8") as f:
+                    f.write(str(yaml.safe_dump({"Source":self.url,"Size":self.rawsize, "Name":self.fname, "Downloaded":self.downloaded_bytes, "Threads":1, "Mode":self.mode, "Download-Pos": self.download_pos})))
                 f.close()
                 print(f"{gr}[>] Exit{de}")
                 sys.exit()
             elif ask.lower() == "rem" or ask.lower() == "remove":
-                os.remove(f"{tmp}/{self.var['name']}")
-                print(f"{gr}Sucessfully remove {self.var['name']}{de}")
+                os.remove(f"{self.tmp_dir}/{self.fname}")
+                print(f"{gr}Sucessfully remove {self.fname}{de}")
                 sys.exit()
             os.system(clear)
-            banner()
-            self.run(self.var['host'])
-        elif args.mode=="multi":
+            banner(self.mode)
+            self.run()
+        elif self.mode == "multi":
             kill_event.clear()
-            print(f"\r{gr}> {mtdata.count(False)} thread(s) failed. Try again, exit or remove(t/e/r)?")
+            print(f"\r{gr}> {self.threads_data_list.count(False)} thread(s) failed. Try again, exit or remove(t/e/r)?")
             ask=input("> ")
             if ask.lower() == "e" or ask.lower() == "exit":
-                with open(f"{tmp}/{self.var['name']}.log","w",encoding="utf-8") as f:
-                    f.write(f"Source: \'{args.url}\'\nSize: {self.var['rawsize']}\nName: \'{self.var['name']}\'\nDownloaded: {rundl.dlded}\nThreads: {args.threads}\nMode: multi\nThread-Pos: {rundl.pos}\nReturn-Pos: {mtdata}")
+                with open(f"{self.tmp_dir}/{self.fname}.log","w",encoding="utf-8") as f:
+                    f.write(str(yaml.safe_dump({"Source":self.url,"Size":self.rawsize, "Name":self.fname, "Downloaded":self.downloaded_bytes, "Threads":self.data["threads"], "Mode":self.mode, "Download-Pos": self.download_pos, "Threads-Result":self.multithread_list})))
                 f.close()
                 print(f"{gr}[>] Exit{de}")
                 sys.exit()
             elif ask.lower() == "r" or ask.lower() == "resume":
-                for i in range(args.threads):
-                    os.remove(f"{tmp}/{self.var['name']}-{i+1}")
-                print(f"{re}> {gr}File {cy}{self.var['name']} {gr}was successfully removed{de}")
+                for i in range(self.data['threads']):
+                    os.remove(f"{self.tmp_dir}/{self.fname}-{i+1}")
+                print(f"{re}> {gr}File {cy}{self.fname} {gr}was successfully removed{de}")
                 return
             os.system(clear)
-            banner()
-            rundl.dlded=0
-            for i in range(args.threads): rundl.dlded+=os.path.getsize(f"{tmp}/{self.var['name']}-{i+1}")
-            self.run(self.var["host"],reslist=mtdata)
+            banner(self.mode)
+            self.downloaded_bytes=0
+            for i in range(self.data['threads']):
+                self.downloaded_bytes+=os.path.getsize(f"{self.tmp_dir}/{self.fname}-{i+1}")
+            self.run()
 
-    def run(self, host, reslist=None):
+    def run(self):
         '''Handle the entire process'''
-        self.var["host"]=host
-        for key, value in {"mediafire":mediafire,"solidfiles":solidfiles,"tusfiles":tusfiles,"anonbayfiles":anonbayfiles,"racaty":racaty,"zippyshare":zippyshare,"hxfile":hxfile}.items():
-            if host == key:
+        get_url=Grabber(self.url)
+        for key, value in {"mediafire":get_url.mediafire,"solidfiles":get_url.solidfiles,"tusfiles":get_url.tusfiles,"anonbayfiles":get_url.anonbayfiles,"racaty":get_url.racaty,"zippyshare":get_url.zippyshare,"hxfile":get_url.hxfile}.items():
+            if self.host == key:
                 try:
-                    lxmlval=value(args.url)
+                    grab_result=value()
+                    if not self.resume:
+                        self.url_grab, self.rawsize, self.fname=grab_result
+                    elif self.resume:
+                        self.url_grab=grab_result[0]
+                    del grab_result
                     break
                 except IndexError:
                     print(f"{re}[X] File not found")
                     sys.exit(1)
-        if self.var['resume']:
-            self.var["url"]=lxmlval[0]
-        else:
-            self.var["url"], self.var["rawsize"], self.var["name"]=lxmlval
-        if args.direct:
-            print(f"{de}{gra}>>> {dgr}[=] Link : {cy}{self.var['url']}{de}")
+        del get_url
+        if self.direct:
+            print(f"{gr}>>> [{wh}={gr}] Link : {cy}{self.url_grab}{de}")
             return
-        if lxmlval[1] is None:
-            self.var['can_paused']="No"
-            self.var['size']="Null"
-            args.mode="single"
+        if self.rawsize is None:
+            self.data['can_paused']="No"
+            self.mode="single"
+            self.modified_size="null"
         else:
-            self.var['size']=getsize(self.var['rawsize'])
-        print(f"""{de}> [INFO] Filename : {self.var['name']}
-         Size : {self.var['size']}
-         Can Paused : {self.var['can_paused']}""")
-        if args.mode == "single":
-            if not self.var['resume']:
+            self.modified_size=Prog.getsize(self.rawsize)
+        print(f"""{de}> [INFO] Filename : {self.fname}
+         Size : {self.modified_size}
+         Pausable : {self.data['can_paused']}""")
+        if self.mode == "single":
+            if not self.resume:
                 print(f"{ye}> [Info] Downloading")
                 try:
-                    if self.var['rawsize'] is None:
-                        download(self.var['name'],None,self.var['url'],None)
-                    else:
-                        rundl.pos={"start":0,"end":self.var['rawsize']}
-                        download(self.var['name'],self.var['rawsize'],self.var['url'],rundl.pos)
+                    self.download_pos={"start":0,"end":self.rawsize}
+                    self.download()
                     self.finish()
                     sys.exit()
                 except ThreadPaused:
                     self.paused()
             print(f"{ye}> [Info] Resuming")
             try:
-                download(self.var['name'],self.var['rawsize'],self.var['url'],rundl.pos,resume=True)
+                self.download(pos=self.download_pos)
                 self.finish()
                 sys.exit()
             except ThreadPaused:
                 self.paused()
-        elif args.mode == "multi":
-            if not self.var['resume']:
-                args.threads=multitest(self.var['url'])
+        elif self.mode == "multi":
+            if not self.resume:
+                self.data['threads']=self.multithreaded_test(self.url, self.data['threads'])
                 self.ai()
-                try: run=multidl_handler(self.var['name'],self.var['url'],self.var['rawsize'])
-                except KeyboardInterrupt: pass
-            else:
-                try: run=multidl_handler(self.var['name'],self.var['url'],self.var['rawsize'],resume=True,thres=reslist)
-                except KeyboardInterrupt: pass
-            tmpres=sorted([i.result() for i in concurrent.futures.as_completed(run)], key=lambda p: p["Pos"])
-            if self.var["resume"]:
-                for i in tmpres:
-                    self.res[i["Pos"]-1]["Val"]=i["Val"]
-            else:
-                self.res=tmpres
-            reslist=[self.res[i]["Val"] for i,_ in enumerate(self.res)]
-            if all(reslist):
+            try:
+                run=self.multidl_handler()
+            except KeyboardInterrupt:
+                pass
+            self.multithread_list=sorted([i.result() for i in concurrent.futures.as_completed(run)], key=lambda p: p["Pos"])
+            self.threads_data_list=[i["Val"] for i in self.multithread_list]
+            if all(self.threads_data_list):
                 print(f"\r\n{de}> Assembling file into one solid file. Please wait!",end="")
                 self.finish()
-                sys.exit()
-            self.paused(mtdata=reslist)
+                return
+            self.paused()
 
-def get_setting():
-    '''Get and return program settings'''
-    temp=[]
-    try:
-        with open("config.json","r",encoding="utf-8") as f:
-            jsonvar=json.load(f)
-            temp.append(jsonvar["tmp_location"])
-            temp.append(jsonvar["complete_location"])
-            temp.append(jsonvar["chunk_size"])
-            temp.append(jsonvar["thread_count"])
-            temp.append(jsonvar["default_mode"])
-    except (json.decoder.JSONDecodeError, KeyError, FileNotFoundError):
-        print(f"{dre}>>> {de}{dbl}[Err] {re}Config file didn't found or corrupted\n{de}{dre}>>> {de}{dgr}[+] {gr}Creating new config.json!{de}")
-        with open("config.json","w",encoding="utf-8") as f:
-            f.write("""{
-    \"tmp_location\":\"tmp\",
-    \"complete_location\":\"complete\",
-    \"chunk_size\":128,
-    \"thread_count\":4,
-    \"default_mode\":\"multi\"
-}""")
+class Grabber:
+    '''Grab url from site'''
+    def __init__(self, url: str):
+        self.url=url
+
+    def mediafire(self) -> list:
+        '''Return mediafire'''
+        newurl=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath('//a[@id="downloadButton"]/@href')[0]
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+        return [newurl,rawsize,name]
+
+    def solidfiles(self) -> list:
+        '''Return solidfiles'''
+        temp=fr(r.get(self.url,headers={"User-Agent":ua()}).text)
+        d="csrfmiddlewaretoken="+temp.xpath('//div[@class=\"buttons\"]/form/input[@name=\"csrfmiddlewaretoken\"]/@value')[0]+"&referrer="
+        url=r.post("http://www.solidfiles.com"+temp.xpath('//div[@class=\"buttons\"]/form/@action')[0],headers={"User-Agent":ua()},data=d).text
+        newurl=findall('url=(.+)',fr(url).xpath("//meta[@http-equiv=\"refresh\"]/@content")[0])[0]
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=r.utils.unquote(newurl.split('/')[-1])
+        return [newurl,rawsize,name]
+
+    def tusfiles(self) -> list:
+        '''Return tusfiles'''
+        temp=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath("//form[@method=\"POST\"]/input/@value")
+        d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
+        newurl=r.post(self.url,headers={"User-Agent":ua()}, data=d, allow_redirects=False).headers["location"]
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"Keep-Alive"})
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=newurl.split("/")[-1]
+        return [newurl,rawsize,name]
+
+    def anonbayfiles(self) -> list:
+        '''Return anonbay and bayfiles'''
+        newurl=fr(r.get(self.url, headers={"User-Agent":ua()}).text).xpath('//a[@id=\"download-url\"]/@href')[0]
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=findall('filename="(.+)"',data.headers['Content-Disposition'])[0]
+        return [newurl,rawsize,name]
+
+    def racaty(self) -> list:
+        '''Return racaty'''
+        temp=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath("//form[@id=\"getExtoken\"]/input/@value")
+        d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free=&method_premium=1"
+        _=r.post(self.url,headers={"User-Agent":ua()},data=d).text
+        newurl=fr(_).xpath("//a[@id='uniqueExpirylink']/@href")[0]
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"},verify=False)
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=newurl.split("/")[-1]
+        return [newurl,rawsize,name]
+
+    def zippyshare(self) -> list:
+        '''Return zippyshare'''
+        var=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath("//a[@id=\"dlbutton\"]/following-sibling::script/text()")[0].splitlines()[1][:-1]
+        var=var.replace("document.getElementById('dlbutton').href =","")
+        _=findall(r"\((.+)\)",var)[0]
+        var=var.replace(f"({_})",f"\"{eval(_)}\"")
+        newurl="https://"+(self.url).split("/")[2]+eval(var)
+        data=r.Session().head(newurl,headers={"User-Agent":ua()})
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=r.utils.unquote(findall("UTF-8\'\'(.+)",data.headers['Content-Disposition'])[0])
+        return [newurl,rawsize,name]
+
+    def hxfile(self):
+        '''Return hxfile'''
+        temp=fr(r.get(self.url,headers={"User-Agent":ua()}).text).xpath("//form[@name=\"F1\"]/input/@value")
+        d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free&method_premium=1"
+        var=r.post(self.url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
+        newurl=fr(var).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+        try:
+            rawsize=int(data.headers['content-length'])
+        except KeyError:
+            rawsize=None
+        name=newurl.split("/")[-1]
+        return [newurl,rawsize,name]
+
+class Prog:
+    '''Utilities'''
+    @staticmethod
+    def getsize(file_size: int) -> str:
+        '''Return file size with its unit'''
+        if file_size < 1024:
+            modified_size=f"{file_size} Bytes"
+        elif 1024 <= file_size < 1048576:
+            modified_size=f"{round(file_size / 1024, 2)} KB"
+        elif 1048576 <= file_size < 1073741824:
+            modified_size=f"{round(file_size / 1048576, 2)} MB"
+        elif file_size >= 1073741824:
+            modified_size=f"{round(file_size / 1073741824, 2)} GB"
+        return modified_size
+
+    @staticmethod
+    def get_paused(temporary: str, quiet: bool=False) -> None:
+        '''Get list of paused download(s)'''
+        from glob import glob
+        list_pausedfile: list=glob(f"{temporary}/*.log")
+        if not quiet:
+            print(f">>> {ye}[{cy}Info{ye}] {gr}List of Paused Download\n{wh}----------------------------------\n{re}[Id]   {cy}[Name]{de}")
+        with open("paused.info","w",encoding="utf-8") as f:
+            f.write("{")
+            for i,n in enumerate(list_pausedfile):
+                if not quiet:
+                    print(f"{gr}[{i+1}] {os.path.basename(n).split('.log')[0]}{de}")
+                if i == 0:
+                    f.write(f"\"{str(i+1)}\":\"{os.path.basename(n).split('.log')[0]}\"")
+                elif i != 0 and i+1 != len(list_pausedfile):
+                    f.write(f",\"{str(i+1)}\":\"{os.path.basename(n).split('.log')[0]}\"")
+            f.write("}")
             f.close()
-        temp=["tmp","complete",128,4,"multi"]
-    return temp
 
-def get_paused(quiet=False):
-    '''Get list of paused download'''
-    from glob import glob
-    pausedfile=glob(f"{tmp}/*.log")
-    if not quiet: print(f"{gra}>>> {dbl}[Info] {dgr}List Of Paused Download\n{wh}----------------------------------\n{de}{dre}[Id]{de}   {dcy}[Name]{de}")
-    with open("paused.info","w",encoding="utf-8") as f:
-        f.write("{")
-        for i,n in enumerate(pausedfile):
-            if not quiet: print(f"{dgr}[{i+1}] {gr}{os.path.basename(n).split('.log')[0]}{de}")
-            if i == 0: f.write("\""+str(i+1)+"\""+":\""+os.path.basename(n).split('.log')[0]+"\"")
-            elif i != 0 and i+1 != len(pausedfile): f.write(","+"\""+str(i+1)+"\""+":\""+os.path.basename(pausedfile[i]).split('.log')[0]+"\"")
-        f.write("}")
-        f.close()
+    @staticmethod
+    def get_user_setting() -> list:
+        '''Get config.json'''
+        result=[]
+        try:
+            with open("config.json", "r", encoding="utf-8") as f:
+                jsonvar=json.load(f)
+                result=[jsonvar[i] for i in ["tmp_location","complete_location","chunk_size","thread_count","default_mode"]]
+        except (json.decoder.JSONDecodeError, KeyError, FileNotFoundError):
+            print(f"""{de}>>> {re}[Err] Config file didn't found or corrupted\n{de}>>> {gr}[{wh}+{gr}] Creating new config.json!{de}""")
+            with open("config.json", "w", encoding="utf-8") as f:
+                json.dump({"tmp_location":"tmp","complete_location":"complete","chunk_size":128,"thread_count":4,"default_mode":"multi"},f)
+                f.close()
+            result=["tmp","complete",128,4,"multi"]
+        return result
+
+def main() -> None:
+    '''Main Function'''
+    tmp_dir=Prog.get_user_setting()
+    complete_dir=tmp_dir[1]
+
+    #Argument Parser
+    parser=argparse.ArgumentParser()
+    subparser=parser.add_subparsers(dest="action",required=True)
+    parser1=subparser.add_parser("download",help="Download a file from url")
+    parser1.add_argument("-d","--grabdirectlink",help="Return direct download link",dest="direct",action="store_true")
+    parser1.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config",default=tmp_dir[2])
+    parser1.add_argument("-m","--mode",metavar="mode",help="Select singlethreaded or multithreaded download",choices=["single","multi"],default=tmp_dir[4])
+    parser1.add_argument("-t","--threads",metavar="int",type=int,help="Override threads count in config",choices=range(2,9),default=tmp_dir[3])
+    parser1.add_argument("url")
+    parser2=subparser.add_parser("resume",help="Resume paused download by selecting the id")
+    parser2.add_argument("id", type=int, help="That file id you wanna resume")
+    parser2.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config", default=tmp_dir[2])
+    subparser.add_parser("paused",help="Get list of paused download")
+    args=parser.parse_args()
+
+    #Check temporary and complete download folder
+    tmp_dir=tmp_dir[0]
+    if tmp_dir[-1:] == "/":
+        tmp_dir=tmp_dir[:-1]
+    if complete_dir[-1:] == "/":
+        complete_dir=complete_dir[:-1]
+    if not os.path.isdir(tmp_dir):
+        os.mkdir(tmp_dir)
+    if not os.path.isdir(complete_dir):
+        os.mkdir(complete_dir)
+
+    if args.action == "download":
+        start(args.mode, args.url)
+        if args.mode == "single":
+            args.threads=1
+        DL(args.chunk, args.mode, args.threads, args.url, tmp_dir, complete_dir, direct=args.direct).run()
+    elif args.action == "resume":
+        if os.path.exists("paused.info"):
+            Prog.get_paused(tmp_dir, quiet=True)
+        with open("paused.info", encoding="utf-8") as f:
+            try:
+                with open(f"{tmp_dir}/{json.load(f)[str(args.id)]}.log", encoding="utf-8") as selected_f:
+                    load_yaml=yaml.safe_load(selected_f.read())
+                url=load_yaml["Source"]
+                rawsize=load_yaml["Size"]
+                file_name=load_yaml["Name"]
+                downloaded=load_yaml["Downloaded"]
+                mode=load_yaml["Mode"]
+                download_pos=load_yaml["Download-Pos"]
+                resume_args={"name":file_name,"downloaded":downloaded,"rawsize":rawsize,"download_pos":download_pos}
+                if mode == 'multi':
+                    threads=load_yaml["Threads"]
+                    threads_result=load_yaml["Threads-Result"]
+                    resume_args["threads_result"]=threads_result
+                elif mode == 'single':
+                    threads=1
+            except (KeyError, yaml.scanner.ScannerError):
+                print(f"{re} An error occured. Try get a new list of paused download!{de}")
+                sys.exit(1)
+            except FileNotFoundError:
+                print(f"{re}[Err] File with download {args.id} doesn't exist{de}")
+                sys.exit(1)
+            f.close()
+        start(mode, url)
+        DL(args.chunk, mode, threads, url, tmp_dir, complete_dir, resume=resume_args).run()
+    elif args.action == "paused":
+        Prog.get_paused(tmp_dir)
 
 if __name__ == "__main__":
-    from math import floor
-    from random import choice
-    from platform import system as ps
-    from shutil import move
-    from re import findall
-    import sys,os,json,argparse,concurrent.futures
-    if sys.version_info[0] != 3:
-        print("[Err] Run with python3!")
-        sys.exit()
-    try:
-        from lxml.html import fromstring as fr
-        import requests as r
-        r.urllib3.disable_warnings(category=r.urllib3.exceptions.InsecureRequestWarning)
-        import yaml
-        from requests.exceptions import ChunkedEncodingError
-    except ModuleNotFoundError:
-        print("Install required package with \'pip install -r requirements.txt\'")
-        sys.exit()
-
-    #COLOR CODE
+    #Program Color Code
     if ps() == 'Windows':
         try:
-            from colorama import init, Fore, Style
+            from colorama import init, Fore
             init()
-            dre=Fore.RED+Style.DIM
-            dgr=Fore.GREEN
-            dbl=Fore.BLUE
-            dcy=Fore.CYAN
-            gra=Fore.WHITE
-            wh=Fore.WHITE + Style.BRIGHT
-            re=Fore.RED + Style.BRIGHT
-            gr=Fore.GREEN + Style.BRIGHT
-            ye=Fore.YELLOW + Style.BRIGHT
-            cy=Fore.CYAN + Style.BRIGHT
-            ma=Fore.MAGENTA + Style.BRIGHT
-            de=Style.RESET_ALL
-            del(init,Fore,Style)
+            wh=Fore.LIGHTWHITE_EX
+            re=Fore.LIGHTRED_EX
+            gr=Fore.LIGHTGREEN_EX
+            ye=Fore.LIGHTYELLOW_EX
+            ma=Fore.LIGHTMAGENTA_EX
+            cy=Fore.LIGHTCYAN_EX
+            de=Fore.RESET
+            del init,Fore
             clear="cls"
         except ModuleNotFoundError:
             print("Install colorama with \'pip install colorama\'")
             sys.exit()
     else:
-        dre="\033[2;31m"
-        dgr="\033[32m"
-        dbl="\033[34m"
-        dcy="\033[36m"
-        gra="\033[37m"
+        wh="\033[1;37m"
         re="\033[1;31m"
         gr="\033[1;32m"
         ye="\033[1;33m"
         ma="\033[1;35m"
         cy="\033[1;36m"
-        wh="\033[1;37m"
-        de="\033[1;0m"
+        de="\033[0m"
         clear="clear"
+    del ps
 
-    tmp=get_setting()
-    complete=tmp[1]
+    main()
 
-    parser=argparse.ArgumentParser()
-    subparser=parser.add_subparsers(dest="command",required=True)
-    parser1=subparser.add_parser("download",help="Download a file from url")
-    parser1.add_argument("-d","--grabdirectlink",help="Return direct download link",dest="direct",action="store_true")
-    parser1.add_argument("-ns","--no-sleep",help="Return direct download link",dest="nosleep",action="store_true")
-    parser1.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config",default=tmp[2])
-    parser1.add_argument("-m","--mode",metavar="mode",help="Select singlethreaded or multithreaded download",choices=["single","multi"],default=tmp[4])
-    parser1.add_argument("-t","--threads",metavar="int",type=int,help="Override threads count in config",choices=range(2,9),default=tmp[3])
-    parser1.add_argument("url")
-    parser2=subparser.add_parser("resume",help="Resume paused download by selecting the id")
-    parser2.add_argument("id",type=int,help="That file id you wanna resume")
-    parser2.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config",default=tmp[2])
-    parser2.add_argument("-ns","--no-sleep",help="Return direct download link",dest="nosleep",action="store_true")
-    parser3=subparser.add_parser("paused",help="Get list of paused download")
-    args=parser.parse_args()
-
-    tmp=tmp[0]
-    if tmp[-1:] == "/": tmp=tmp[:-1]
-    if complete[-1:] == "/": complete=complete[:-1]
-    if not os.path.isdir(tmp): os.mkdir(tmp)
-    if not os.path.isdir(complete): os.mkdir(complete)
-
-    if args.command in ["download","resume"]:
-        if args.nosleep:
-            from time import time
-            def sleep(a): #pylint: disable=unused-argument
-                """0 time Sleep"""
-                return
-        else: from time import time, sleep
-        if args.command == "resume":
-            rundl=dl(resume=True)
-            if not os.path.exists("paused.info"): get_paused(quiet=True)
-            with open("paused.info",encoding="utf-8") as pfile:
-                try:
-                    with open(f"{tmp}/{json.load(pfile)[str(args.id)]}.log",encoding="utf-8") as idfile:
-                        try:
-                            dyaml=yaml.safe_load(idfile.read())
-                            args.url=dyaml['Source']
-                            args.mode=dyaml['Mode']
-                            args.threads=dyaml['Threads']
-                            args.direct=False
-                            rundl.dlded=dyaml["Downloaded"]
-                            rundl.pos=dyaml["Thread-Pos"]
-                            rundl.var["rawsize"]=dyaml["Size"]
-                            rundl.var["name"]=dyaml["Name"]
-                            rundl.res=dyaml["Return-Pos"]
-                        except (KeyError, yaml.scanner.ScannerError):
-                            print(f"{re} An error occured. Try get a new list of paused download!{de}")
-                            sys.exit()
-                        idfile.close()
-                except FileNotFoundError:
-                    print(f"{re}[Err] File with download {args.id} doesn't exist{de}")
-                    sys.exit()
-                pfile.close()
-                del(idfile,pfile,dyaml)
-        else:
-            rundl=dl()
-        if not args.mode in ["multi","single"]:
-            print(f"{re}[Err] Download mode isn't corrent{de}")
-            sys.exit()
-        if args.mode == "multi":
-            from threading import Event as tevent
-            kill_event=tevent()
-        if not isinstance(args.threads,int):
-            print(f"{re}[Err] Threads value must an interger")
-            sys.exit()
-        start()
-        if "mediafire.com" in args.url:
-            rundl.run("mediafire")
-        elif "solidfiles.com" in args.url:
-            rundl.run("solidfiles")
-        elif "tusfiles.com" in args.url:
-            rundl.run("tusfiles")
-        elif "bayfiles.com" in args.url or "anonfiles.com" in args.url:
-            rundl.run("anonbayfiles")
-        elif "racaty.net" in args.url:
-            rundl.run("racaty")
-        elif "zippyshare.com" in args.url:
-            rundl.run("zippyshare")
-        elif "hxfile.co" in args.url:
-            rundl.run("hxfile")
-        else:
-            print(f"{re}[X] File hosting that you insert isn't supported{de}")
-    elif args.command == "paused":
-        get_paused()
-else:
-    raise ImportError("This script can\'t be imported, because may cause an error")
