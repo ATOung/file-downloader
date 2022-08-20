@@ -1,12 +1,14 @@
 # File-Downloader
 
-### About
-File-Downloader is a script that download file from (ex: mediafire) with command line.
+## About
+File-Downloader is a script that download a file from (ex: mediafire) with command line.
 
-### Installation
+<img src="https://img.shields.io/badge/Python-3-informational?logo=python&style=for-the-badge">
+
+## Installation
 1. Clone this repository
 ```
-git clone https://github.com/XniceCraft/file-downloader
+git clone --depth 1 https://github.com/XniceCraft/file-downloader
 ```
 2. Install python3 (if you aren't installed one)
 <br>• Windows: ```Download python from https://www.python.org/```
@@ -16,10 +18,11 @@ git clone https://github.com/XniceCraft/file-downloader
 pip install -r requirements.txt
 ```
 
-To use the program read the usage.
+To use the program read the usage or python3 prog.py -h
 
-### Usage
-#### 1. Download
+## Usage
+### 1. Download
+> Download a file
 
 ```usage: prog.py download [-h] [-d] [-c int] [-m mode] [-t int] url```
 
@@ -35,7 +38,9 @@ optional arguments:
  
 > Example: ```python prog.py download https://mediafire.com/xxxxx```
 
-#### 2. Resume
+### 2. Resume
+> Continue paused download
+
 ```usage: prog.py resume [-h] [-c int] id```
 
 positional arguments:<br>
@@ -47,7 +52,9 @@ optional arguments:
 
 > Example: ```python prog.py resume 1```
 
-#### 3. Paused
+### 3. Paused
+> Return list of paused downloads
+
 ```usage: prog.py paused```
 
 ### Supported File Hosting
@@ -60,14 +67,14 @@ optional arguments:
 - Zippyshare
 - Hxfile
 
-### Features
+## Features
 - Download speed meter (updated every second - Multithread / every chunk cycle - Singlethread)
 - Internet ping test (based on singapore firstmedia speedtest server)
 - Pause (CTRL-C for pause)
 - Grab direct download link with -d argument
 - Can select singlethreaded or multithreaded (default: multithreaded)
 
-### Known Issues
+## Known Issues
 - 
 
 > Please report if there is a bug on this script
