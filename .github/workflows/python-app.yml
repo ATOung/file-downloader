@@ -30,13 +30,12 @@ jobs:
 # Solidfiles not available for now
 #    - name: Solidfiles
     - name: Racaty
-      run: python prog.py download -ns https://racaty.net/1tcu5sr8k5z6
+      run: python prog.py download https://racaty.net/1tcu5sr8k5z6
     - name: Anonfiles
-      run: python prog.py download -ns https://anonfiles.com/jbC8Wak9y6/Dummy_zip
+      run: python prog.py download https://anonfiles.com/jbC8Wak9y6/Dummy_zip
     - name: Bayfiles
-      run: python prog.py download -ns https://bayfiles.com/JeK5W5kcyb/Dummy_zip
+      run: python prog.py download https://bayfiles.com/JeK5W5kcyb/Dummy_zip
     - name: Zippyshare
-      run: python prog.py download -ns https://www42.zippyshare.com/v/wRdO7y1A/file.html
+      run: python prog.py download https://www42.zippyshare.com/v/wRdO7y1A/file.html
     - name: Hxfile
-      run: python prog.py download -ns https://hxfile.co/dpnia0tpgmao
-        
+      run: python prog.py download https://hxfile.co/dpnia0tpgmao
