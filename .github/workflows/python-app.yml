@@ -6,8 +6,6 @@ name: Download Test
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 permissions:
   contents: read
@@ -30,7 +28,7 @@ jobs:
 # Solidfiles not available for now
 #    - name: Solidfiles
     - name: Racaty
-      run: python prog.py download https://racaty.net/1tcu5sr8k5z6
+      run: python prog.py download https://racaty.net/qyvnsz9inbkl
     - name: Anonfiles
       run: python prog.py download https://anonfiles.com/jbC8Wak9y6/Dummy_zip
     - name: Bayfiles
