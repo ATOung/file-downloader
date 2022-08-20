@@ -35,6 +35,6 @@ jobs:
 #    - name: Bayfiles
 #      run: python prog.py download https://bayfiles.com/JeK5W5kcyb/Dummy_zip
     - name: Zippyshare
-      run: python prog.py download https://www42.zippyshare.com/v/wRdO7y1A/file.html
+      run: python prog.py download https://www6.zippyshare.com/v/gZ7oM3DH/file.html
     - name: Hxfile
       run: python prog.py download https://hxfile.co/dpnia0tpgmao
