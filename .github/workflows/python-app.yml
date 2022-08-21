@@ -36,3 +36,5 @@ jobs:
       run: python prog.py download https://www6.zippyshare.com/v/gZ7oM3DH/file.html
     - name: Hxfile
       run: python prog.py download https://hxfile.co/41gk09mhtc89
+    - name: Tusfiles
+      run: python prog.py download https://tusfiles.com/t6w03a6ovojz
