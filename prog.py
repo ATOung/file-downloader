@@ -160,7 +160,7 @@ class DL:
         '''Download function for multi and singlethread'''
         try:
             if self.mode == 'multi' or bool(self.mode == 'single' and self.resume):
-                resp=r.Session().get(self.url_grab, headers={"User-Agent":ua(), "Range":f"bytes={pos['start']}-{pos['end']}"}, stream=True, timeout=5, verify=False)
+                resp=r.Session().get(self.url_grab, headers={"User-Agent":ua(),"Accept-Encoding":"identity", "Range":f"bytes={pos['start']}-{pos['end']}"}, stream=True, timeout=5, verify=False)
             elif self.mode == 'single':
                 resp=r.Session().get(self.url_grab, headers={"User-Agent":ua()}, stream=True, timeout=5, verify=False)
             if not self.resume:
