@@ -482,7 +482,7 @@ class Grabber:
         d=f"op={temp[0]}&id={temp[1]}&rand={temp[2]}&referer=&method_free&method_premium=1"
         var=r.post(self.url,headers={"User-Agent":ua(),"content-type":"application/x-www-form-urlencoded"},data=d).text
         newurl=fr(var).xpath("//a[@class=\"btn btn-dow\"]/@href")[0]
-        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+        data=r.head(newurl,headers={"User-Agent":ua(),"Connection":"keep-alive","Accept-Encoding":"identity"})
         try:
             rawsize=int(data.headers['content-length'])
         except KeyError:
