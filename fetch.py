@@ -89,8 +89,11 @@ class Parser:
         """Return Anonfiles and Bayfiles"""
         res=fromstring(req.get(self.url, headers={"User-Agent":ua()}).text)
         download_url=res.xpath('//a[@id=\"download-url\"]/@href')[0]
-        fmt_size=findall(r"\((.+)\)",res.xpath(r'//a[@id=\"download-url\"]')[0].text_content())[0]
+        fmt_size=findall(r"\((.+)\)",res.xpath('//a[@id="download-url"]')[0].text_content())[0]
         data=req.head(download_url,headers={"User-Agent":ua(),"Connection":"keep-alive"})
+        if 'Location' in data.headers:
+            download_url=data.headers['Location']
+            data=req.head(download_url,headers={"User-Agent":ua(),"Connection":"keep-alive"})
         try:
             size=int(data.headers['content-length'])
         except KeyError:
