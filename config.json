@@ -1,7 +1,1 @@
-{
-    "tmp_location":"tmp",
-    "complete_location":"complete",
-    "chunk_size":128,
-    "thread_count":4,
-    "default_mode":"multi"
-}
+{"temp_location": "temp", "complete_location": "complete", "chunk_size": 128, "thread_count": 4, "default_mode": "multi"}
