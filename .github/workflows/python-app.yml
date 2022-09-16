@@ -25,10 +25,8 @@ jobs:
         pip install -r requirements.txt
     - name: Mediafire
       run: python prog.py download https://www.mediafire.com/file/pygk38vfgykmm3u/Dummy.txt/file
-# Solidfiles not available for now
-#    - name: Solidfiles
-    - name: Racaty
-      run: python prog.py download https://racaty.net/qyvnsz9inbkl
+    - name: Solidfiles
+      run: python prog.py download https://www.solidfiles.com/v/A3qk56rZNPZGg
     - name: Anonfiles
       run: python prog.py download https://anonfiles.com/6ded8d44y7/20220820_135747_1_png
 #Anonfiles as same as Bayfiles
