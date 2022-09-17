@@ -33,14 +33,15 @@ def test() -> None:
         print(f"{re}[Err] Connection Error!{de}")
         sys_exit()
 
-def start(mode: str, url: str) -> None:
+def start(mode: str, url: str, skip_test=False) -> None:
     '''Start'''
     if "https://" in url or "http://" in url:
         os_system(clear)
-        banner(mode)
-        test()
-        sleep(2)
-        os_system(clear)
+        if not skip_test:
+            banner(mode)
+            test()
+            sleep(2)
+            os_system(clear)
         banner(mode)
         return
     print(f"{re}[Err] Invalid URL scheme. There is no http/https in URL{de}")
@@ -85,19 +86,23 @@ def main():
     subparser=parser.add_subparsers(dest="action",required=True)
     parser1=subparser.add_parser("download",help="Downloada file from url")
     parser1.add_argument("-d","--grabdirectlink",help="Return direct download link",dest="direct",action="store_true")
-    parser1.add_argument("-m","--mode",metavar="mode",help="Select singlethreaded or multithreaded download",choices=["single","multi"],default=temp_dir[4])
-    parser1.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config",default=temp_dir[2])
-    parser1.add_argument("-t","--threads",metavar="int",type=int,help="Override threads count in config",choices=range(2,9),default=temp_dir[3])
+    parser1.add_argument("-m","--mode", metavar="mode",help="Select singlethreaded or multithreaded download",choices=["single","multi"],default=temp_dir[4])
+    parser1.add_argument("-nt","--no-test", action="store_true", help="Skip the internet test", dest="notest")
+    parser1.add_argument("-o","--overwrite", action="store_true", help="Allow overwrite if file exists")
+    parser1.add_argument("-c","--chunk", type=int, metavar="int", help="Override chunk size in config", default=temp_dir[2])
+    parser1.add_argument("-t","--threads", type=int, metavar="int", help="Override threads count in config", choices=range(2,9), default=temp_dir[3])
     parser1.add_argument("url")
     parser2=subparser.add_parser("resume",help="Resume paused download by selecting the id")
     parser2.add_argument("id", type=int, help="That file id you wanna resume")
     parser2.add_argument("-c","--chunk",type=int,metavar="int",help="Override chunk size in config", default=temp_dir[2])
+    parser2.add_argument("-nt","--no-test", action="store_true", help="Skip the internet test", dest="notest")
+    parser2.add_argument("-o","--overwrite", action="store_true", help="Allow overwrite if file exists")
     subparser.add_parser("paused",help="Get list of pauseddownload")
     args=parser.parse_args()
 
     temp_dir=temp_dir[0]
     if args.action == "download":
-        start(args.mode, args.url)
+        start(args.mode, args.url, skip_test=args.notest)
         if args.direct:
             print(f"{gr}>>> [{wh}={gr}] Link : {cy}{extract_info(args.url).download_url}{de}")
             return
@@ -108,6 +113,7 @@ def main():
             temp_dir=temp_dir,
             chunk_size=args.chunk,
             mode=args.mode,
+            overwrite=args.overwrite,
             threads=args.threads)
         @dl.event
         def on_pause():
@@ -162,13 +168,14 @@ def main():
                 print(f"{re}[Err] File with download {args.id} doesn't exist{de}")
                 sys_exit(1)
             f.close()
-        start(mode, url)
+        start(mode, url, skip_test=args.notest)
         dl=setup_download(url,
             complete_dir=complete_dir,
             temp_dir=temp_dir,
             chunk_size=args.chunk,
             mode=mode,
             threads=threads,
+            overwrite=args.overwrite,
             resume=True)
         @dl.event
         def on_pause():
