@@ -24,15 +24,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Mediafire
-      run: python prog.py download https://www.mediafire.com/file/pygk38vfgykmm3u/Dummy.txt/file
+      run: python prog.py download -nt -o -t 8 https://www.mediafire.com/file/pygk38vfgykmm3u/Dummy.txt/file
     - name: Solidfiles
-      run: python prog.py download https://www.solidfiles.com/v/A3qk56rZNPZGg
+      run: python prog.py download -nt -o -t 8 https://www.solidfiles.com/v/A3qk56rZNPZGg
     - name: Anonfiles
-      run: python prog.py download https://anonfiles.com/6ded8d44y7/20220820_135747_1_png
+      run: python prog.py download -nt -o -t 8 https://anonfiles.com/6ded8d44y7/20220820_135747_1_png
 #Anonfiles as same as Bayfiles
     - name: Zippyshare
-      run: python prog.py download https://www6.zippyshare.com/v/gZ7oM3DH/file.html
+      run: python prog.py download -nt -o -t 8 https://www6.zippyshare.com/v/gZ7oM3DH/file.html
     - name: Hxfile
-      run: python prog.py download https://hxfile.co/41gk09mhtc89
+      run: python prog.py download -nt -o -t 8 https://hxfile.co/41gk09mhtc89
     - name: Tusfiles
-      run: python prog.py download https://tusfiles.com/t6w03a6ovojz
+      run: python prog.py download -nt -o -t 8 https://tusfiles.com/t6w03a6ovojz
