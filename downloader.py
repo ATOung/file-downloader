@@ -216,7 +216,6 @@ class FileDownloader(FileInfoBase):
             'unit_scale': True,
             'unit_divisor': 1024,
             'miniters': 1,
-            'delay': 0.5,
             'smoothing': 0.7
         })
 
@@ -259,7 +258,7 @@ class FileDownloader(FileInfoBase):
         if self.__data["is_resume"] and isfile(f"{self.temp_path}-log"):
             osrm(f"{self.temp_path}-log")
         if self.mode == "multi":
-            with open(self.complete_path,"ab") as file:
+            with open(self.complete_path,"wb") as file:
                 for i in range(self.__multithreaded_data['threads']):
                     with open(f"{self.temp_path}-{i+1}","rb") as h:
                         file.write(h.read())
