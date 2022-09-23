@@ -24,7 +24,7 @@ To use the program read the usage or python3 prog.py -h
 ### 1. Download
 > Download a file
 
-```usage: prog.py download [-h] [-d] [-c int] [-m mode] [-t int] url```
+```usage: prog.py download [-h] [-d] [-m mode] [-nt] [-o] [-c int] [-t int] url```
 
 positional arguments:<br>
 ```url```
@@ -32,23 +32,28 @@ positional arguments:<br>
 optional arguments:
  - -h, --help            show this help message and exit
  - -d, --grabdirectlink  Return direct download link
- - -c int, --chunk int   Override chunk size in config
  - -m mode, --mode mode  Select singlethreaded or multithreaded download
- - -t int, --threads int Override threads count in config
+ - -nt, --no-test        Skip the internet test
+ - -o, --overwrite       Allow overwrite if file exists
+ - -c int, --chunk int   Override chunk size in config
+ - -t int, --threads int
+                        Override threads count in config
  
 > Example: ```python prog.py download https://mediafire.com/xxxxx```
 
 ### 2. Resume
 > Continue paused download
 
-```usage: prog.py resume [-h] [-c int] id```
+```usage: prog.py resume [-h] [-c int] [-nt] [-o] id```
 
 positional arguments:<br>
-```id```
+```id: That file id you wanna resume (get it with python prog.py paused)```
 
 optional arguments:
   - -h, --help           show this help message and exit
   - -c int, --chunk int  Override chunk size in config
+  - -nt, --no-test       Skip the internet test
+  - -o, --overwrite      Allow overwrite if file exists
 
 > Example: ```python prog.py resume 1```
 
@@ -68,13 +73,14 @@ optional arguments:
 - Hxfile
 
 ## Features
-- Download speed meter (updated every second - Multithread / every chunk cycle - Singlethread)
+- Download speed meter
 - Internet ping test (based on singapore firstmedia speedtest server)
 - Pause (CTRL-C for pause)
-- Grab direct download link with -d argument
+- Can return direct download link with -d argument
 - Can select singlethreaded or multithreaded (default: multithreaded)
+- You can use import this as a module 
 
 ## Known Issues
-- 
+- Sometimes program can't be paused when using multithreaded mode.
 
 > Please report if there is a bug on this script
