@@ -84,7 +84,7 @@ def main():
     #Argument parser
     parser=ArgumentParser()
     subparser=parser.add_subparsers(dest="action",required=True)
-    parser1=subparser.add_parser("download",help="Downloada file from url")
+    parser1=subparser.add_parser("download",help="Download a file from url")
     parser1.add_argument("-d","--grabdirectlink",help="Return direct download link",dest="direct",action="store_true")
     parser1.add_argument("-m","--mode", metavar="mode",help="Select singlethreaded or multithreaded download",choices=["single","multi"],default=temp_dir[4])
     parser1.add_argument("-nt","--no-test", action="store_true", help="Skip the internet test", dest="notest")
@@ -115,31 +115,6 @@ def main():
             mode=args.mode,
             overwrite=args.overwrite,
             threads=args.threads)
-        @dl.event
-        def on_pause():
-            while True:
-                print(f"{re}[!] {ye}Your download got paused. {gr}(R) {ye}Resume, {gr}(E) {ye}Exit, {gr}(D) {ye}Delete?{de}")
-                user_input=input()
-                if user_input.upper() in ('E','R','D'):
-                    return user_input.upper()
-        @dl.event
-        def post_pause():
-            os_system(clear)
-            banner(args.mode)
-        @dl.event
-        def pre_download(is_resume):
-            if is_resume:
-                print(f"""{de}> [INFO] Filename : {dl.name}
-         Size : {dl.fmt_size}
-{ye}> [Info] Resuming{de}""")
-            else:
-                print(f"""{de}> [INFO] Filename : {dl.name}
-         Size : {dl.fmt_size}
-{ye}> [Info] Downloading{de}""")
-        @dl.event
-        def post_download():
-            print(f"{gr}> Download Finished!{de}")
-        dl.download()
     elif args.action == "paused":
         get_paused(temp_dir)
     elif args.action == "resume":
@@ -177,31 +152,34 @@ def main():
             threads=threads,
             overwrite=args.overwrite,
             resume=True)
-        @dl.event
-        def on_pause():
-            while True:
-                print(f"{re}[!] {ye}Your download got paused. {gr}(R) {ye}Resume, {gr}(E) {ye}Exit, {gr}(D) {ye}Delete?{de}")
-                user_input=input()
-                if user_input.upper() in ('E','R','D'):
-                    return user_input.upper()
-        @dl.event
-        def post_pause():
-            os_system(clear)
-            banner(args.mode)
-        @dl.event
-        def pre_download(is_resume):
-            if is_resume:
-                print(f"""{de}> [INFO] Filename : {dl.name}
+    @dl.event
+    def on_pause():
+        while True:
+            print(f"{re}[!] {ye}Your download got paused. {gr}(R) {ye}Resume, {gr}(E) {ye}Exit, {gr}(D) {ye}Delete?{de}")
+            user_input=input()
+            if user_input.upper() in ('E','R','D'):
+                return user_input.upper()
+    @dl.event
+    def post_pause():
+        os_system(clear)
+        banner(args.mode)
+    @dl.event
+    def pre_download(is_resume):
+        if is_resume:
+            print(f"""{de}> [INFO] Filename : {dl.name}
          Size : {dl.fmt_size}
 {ye}> [Info] Resuming{de}""")
-            else:
-                print(f"""{de}> [INFO] Filename : {dl.name}
+        else:
+            print(f"""{de}> [INFO] Filename : {dl.name}
          Size : {dl.fmt_size}
 {ye}> [Info] Downloading{de}""")
-        @dl.event
-        def post_download():
-            print(f"{gr}> Download Finished!{de}")
-        dl.resume({"size":size, "downloaded_bytes": downloaded_bytes, 'download_pos': download_pos}, **resume_kwargs)
+    @dl.event
+    def post_download():
+        print(f"{gr}> Download Finished!{de}")
+        
+        #Do return or download
+        dl.resume({"size":size, "downloaded_bytes": downloaded_bytes, 'download_pos': download_pos}, **resume_kwargs) if args.action == "resume" else dl.download()
+
 if __name__ == "__main__":
     from glob import glob
     from platform import system as ps
@@ -243,7 +221,6 @@ if __name__ == "__main__":
         de="\033[0m"
         clear="clear"
     del ps
-
     main()
 else:
     raise ImportError("This prog.py isn't intended to be imported as module")
