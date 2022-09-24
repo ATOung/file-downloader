@@ -1,16 +1,26 @@
 # File-Downloader
-
 ## About
-File-Downloader is a script that download a file from (ex: mediafire) with command line.
+File-Downloader is a script to download a file from (ex: mediafire) with command line.
 
 <img src="https://img.shields.io/badge/Python-3-informational?logo=python&style=for-the-badge">
+
+## Table of contents
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Download](#1-download)
+  - [Resume](#2-resume)
+  - [Paused](#3-paused)
+  - [API Usage](#4-api)
+- [Supported File Hosting](#supported-file-hosting)
+- [Features](#features)
+- [Known Issues](#known-issues)
 
 ## Installation
 1. Clone this repository
 ```
 git clone --depth 1 https://github.com/XniceCraft/file-downloader
 ```
-2. Install python3 (if you aren't installed one)
+2. Install python3 (if you haven't installed one)
 <br>• Windows: ```Download python from https://www.python.org/```
 <br>• Linux : ```sudo apt-get install python3```
 3. Install required python module
@@ -18,11 +28,11 @@ git clone --depth 1 https://github.com/XniceCraft/file-downloader
 pip install -r requirements.txt
 ```
 
-To use the program read the usage or python3 prog.py -h
+To use the program read the [usage](#usage)
 
 ## Usage
 ### 1. Download
-> Download a file
+> Download a file or just return the download url.
 
 ```usage: prog.py download [-h] [-d] [-m mode] [-nt] [-o] [-c int] [-t int] url```
 
@@ -58,9 +68,14 @@ optional arguments:
 > Example: ```python prog.py resume 1```
 
 ### 3. Paused
-> Return list of paused downloads
+> Return list of paused download(s)
 
 ```usage: prog.py paused```
+
+### 4. API
+> Import this program as a module
+
+<a href="/API.md">View usage</a>
 
 ### Supported File Hosting
 - Mediafire
