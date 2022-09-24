@@ -178,7 +178,7 @@ def main():
         print(f"{gr}> Download Finished!{de}")
         
         #Do return or download
-        dl.resume({"size":size, "downloaded_bytes": downloaded_bytes, 'download_pos': download_pos}, **resume_kwargs) if args.action == "resume" else dl.download()
+    dl.resume({"size":size, "downloaded_bytes": downloaded_bytes, 'download_pos': download_pos}, **resume_kwargs) if args.action == "resume" else dl.download()
 
 if __name__ == "__main__":
     from glob import glob
