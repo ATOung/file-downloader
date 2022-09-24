@@ -75,7 +75,7 @@ optional arguments:
 ### 4. API
 > Import this program as a module
 
-<a href="/API.md">View usage</a>
+<a href="/API.rst">View usage</a>
 
 ### Supported File Hosting
 - Mediafire
